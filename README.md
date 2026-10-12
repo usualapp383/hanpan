@@ -1,3 +1,3 @@
-# hanpan
+# 틈새 오락실 · BREAK Pocket
 
-무료 미니게임 오락실 웹앱 저장소입니다. (배포 준비 중)
+Take a break. Break a record. — https://breakpocket.com
