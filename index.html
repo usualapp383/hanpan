@@ -398,6 +398,7 @@ kbd{min-width:30px;height:30px;padding:0 8px;border-radius:8px;background:var(--
 #ccsel{flex:none;max-width:9.5em;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:0 8px;font:600 13px var(--f-body,inherit)}
 .lbl2 li.top1{background:linear-gradient(90deg,rgba(255,201,64,.28),var(--night))}.lbl2 li.top2{background:linear-gradient(90deg,rgba(180,190,210,.3),var(--night))}.lbl2 li.top3{background:linear-gradient(90deg,rgba(205,140,90,.26),var(--night))}
 .lbl2 li b{font-size:1.05em}
+.qmspin{width:46px;height:46px;margin:14px auto;border-radius:50%;border:5px solid var(--line);border-top-color:var(--coral);animation:qmr 1s linear infinite}@keyframes qmr{to{transform:rotate(360deg)}}
 </style>
 
 <main class="home" id="home" data-view="home">
@@ -2945,7 +2946,7 @@ const Omok={
   // ---------- 온라인 (room: 각자 자기 수 목록을 presence로 공유) ----------
   enc(a){ return a.map(([x,y])=>OMK_CH[x]+OMK_CH[y]).join(''); },
   dec(s){ const o=[]; s=String(s||''); for(let i=0;i+1<s.length&&o.length<120;i+=2){ const x=OMK_CH.indexOf(s[i]), y=OMK_CH.indexOf(s[i+1]); if(x<0||y<0) break; o.push([x,y]); } return o; },
-  pushNet(){ const n=this.net; if(n&&n.r) n.r.presence({seat:n.seat,g:n.g,mv:this.enc(n.my),nick:n.nick,rule:this.rule}).catch(()=>{}); },
+  pushNet(){ const n=this.net; if(n&&n.r) n.r.presence({seat:n.seat,g:n.g,mv:this.enc(n.my),nick:n.nick,rule:this.rule,cc:myCC()}).catch(()=>{}); },
   netApply(){ const n=this.net; if(!n) return; const n0=this.mv.length, e0=this.state==='end', keepT=this.endT, cc=this.curC; this.quiet=true; const B=n.seat===1?n.my:n.opp, Wt=n.seat===1?n.opp:n.my; this.b=Array.from({length:15},()=>new Array(15).fill(0)); this.mv=[]; this.state='play'; this.win=null;
     for(let i=0;i<B.length;i++){ if(!this.place(B[i][0],B[i][1],true)) break; if(i<Wt.length){ if(!this.place(Wt[i][0],Wt[i][1],true)) break; } else break; }
     this.quiet=false; if(this.mv.length!==n0) this.curC=null; else this.curC=cc;
@@ -2953,12 +2954,12 @@ const Omok={
     if(this.state==='end'){ if(e0) this.endT=keepT; else { this.endT=1.3; FX.shake(5,.2); sfx(880,.4,'triangle',.07,500); } } },
   netPeers(peers){ const n=this.net; if(!n) return; const others=peers.filter(p=>!p.sameTab&&p.presence&&(p.presence.seat===1||p.presence.seat===2));
     const clash=others.find(p=>p.presence.seat===n.seat); if(clash&&clash.peer<n.peer){ n.seat=3-n.seat; this.pushNet(); }
-    const o=others.find(p=>p.presence.seat===3-n.seat); const was=n.oppHere; n.oppHere=!!o; n.oppNick=o?String(o.presence.nick||'상대').slice(0,12):'';
+    const o=others.find(p=>p.presence.seat===3-n.seat); const was=n.oppHere; n.oppHere=!!o; n.oppNick=o?(flagOf(String(o.presence.cc||''))+' '+String(o.presence.nick||'상대').slice(0,12)).trim():'';
     if(o){ if(o.presence.seat===1&&(o.presence.rule==='both'||o.presence.rule==='black')){ this.rule=o.presence.rule; n.hostRule=o.presence.rule; } const og=+o.presence.g||0; if(og>n.g){ n.g=og; n.my=[]; this.sent=false; this.pushNet(); } n.opp=og===n.g?this.dec(o.presence.mv):[]; if(!was){ this.msg='상대가 들어왔어요!'; this.msgT=1.6; sfx(660,.2,'triangle',.06,300); } }
     else { n.opp=[]; if(was){ this.msg='상대가 나갔어요'; this.msgT=2; } }
     this.netApply(); },
-  async netStart(code,host,nick){ const cl=window.claude&&window.claude.use?await window.claude.use('room'):null; if(!cl) return false;
-    const r=await cl.join('omok-'+code).catch(()=>null); if(!r) return false;
+  async netStart(code,host,nick){ let cl=null; try{ cl=window.claude&&window.claude.use?await window.claude.use('room'):null; }catch(e){}
+    let r=cl?await cl.join('omok-'+code).catch(()=>null):null; if(!r){ try{ r=await supaRoom('omok-'+code); }catch(e){ r=null; } } if(!r) return false;
     this.net={r,code,seat:host?1:2,g:1,my:[],opp:[],nick:(nick||'').slice(0,12)||(host?'방장':'손님'),peer:'',oppHere:false};
     const me=()=>{ const m=r.peers().find(p=>p.sameTab); if(m) this.net.peer=m.peer; };
     r.onPeers(ch=>{ me(); this.netPeers(ch.peers); }); this.pushNet(); return true; },
@@ -2977,7 +2978,7 @@ const Omok={
     if(this.state==='end'){ this.endT-=dt; if(this.endT<=0&&!this.sent){ this.sent=true; this.finish(); } return; }
     if(!this.online&&!this.pvp&&this.turn()!==this.myColor()){ this.cpuT-=dt; if(this.cpuT<=0){ const m=this.cpuMove(); if(m) this.place(m[0],m[1]); else { this.state='end'; this.win={c:0}; this.endT=1; } } } },
   finish(){ const c=this.win.c, nm=c===1?'흑':'백';
-    if(this.online){ if(!this.net){ api.over({noRecord:true,tag:'온라인 오목',title:'연결이 끊겼어요'}); return; } this.net.doneG=this.net.g; const mine=c===this.net.seat; api.over({noRecord:true,tag:'온라인 오목',title:c?(mine?'승리!':'패배'):'무승부',big:c?`${nm} 승리`:'',retry:'같은 방에서 한 판 더'}); return; }
+    if(this.online){ if(!this.net){ api.over({noRecord:true,tag:'온라인 오목',title:'연결이 끊겼어요'}); return; } this.net.doneG=this.net.g; const mine=c===this.net.seat; api.over({noRecord:true,tag:'온라인 오목',title:c?(mine?'승리!':'패배'):'무승부',big:c?`${nm} 승리`:'',retry:'같은 상대와 한 판 더',html:'<button class="btn sec" data-act="omk-quick" style="width:100%;margin-top:8px">🎲 새 상대 찾기<small>다른 사람과 바로 매칭</small></button>'}); return; }
     if(this.pvp){ api.over({noRecord:true,title:c?`${nm} 승리!`:'무승부',big:`${this.mv.length}수`}); return; }
     const win=c===this.myColor(), draw=!c, key=streakKey('omok',api.diff), st=win?store.get(key,0)+1:draw?store.get(key,0):0; store.set(key,st); api.setScore(st);
     api.over({title:win?'승리!':draw?'무승부':'아쉽게 패배',big:`${this.mv.length}수`,lblText:win?`${st}연승 중`:draw?`${st}연승 유지`:'연승이 끊겼어요',scoreOverride:st}); },
@@ -6786,6 +6787,8 @@ ov.addEventListener('click',e=>{ const b=e.target.closest('[data-act]'); if(!b)r
   else if(a==='oopt'){ store.set('omok.'+b.dataset.k,b.dataset.v); showStart(cur); }
   else if(a==='online') showOnline();
   else if(a==='omk-new'||a==='omk-join') omkGo(a==='omk-new',b);
+  else if(a==='omk-quick'){ if(Omok.net) Omok.netLeave(); omkQuick(); }
+  else if(a==='omk-qcancel'){ omkQuit(); showOnline(); }
   else if(a==='popt'){ ['f_names','f_pens'].forEach(k=>{ const el=document.getElementById(k); if(el) store.set(k==='f_names'?'party.names':'party.pens',el.value); }); const v=b.dataset.v; store.set('party.'+b.dataset.k,v==='true'?true:v==='false'?false:/^\d+$/.test(v)?+v:v); showStart(cur); }
   else if(a==='dcar'){ const i=+b.dataset.i, own=store.get('drift.own',[0]), w=store.get('drift.wallet',0), c=DCARS[i]; if(own.includes(i)) store.set('drift.car',i); else if(w>=c.cost){ store.set('drift.wallet',w-c.cost); own.push(i); store.set('drift.own',own); store.set('drift.car',i); sfx(988,.3,'triangle',.06,400); } else { sfx(200,.15,'square',.04); b.querySelector('small').textContent=`◆ ${c.cost-w} 부족`; return; } showStart(cur); }
   else if(a==='gset'){ const v=b.dataset.v; store.set(b.dataset.k,/^-?\d+$/.test(v)?+v:v==='true'?true:v==='false'?false:v); showStart(cur); }
@@ -6927,12 +6930,34 @@ function showOnline(code){ const g=cur;
   showOv(`<div class="ovhead"><span class="ovtag">${g.name} · 온라인</span><h2>친구와 온라인 대전</h2></div>
     <p class="ovdesc">방을 만들고 코드를 친구에게 보내면 서로 다른 폰에서 한 판 둘 수 있어요. 방을 만든 사람이 흑(먼저), 들어온 사람이 백이에요.</p>
     <div class="field"><label for="f_nick">내 이름 (상대에게 보여요 · 최대 12자)</label><input id="f_nick" maxlength="12" autocomplete="off" value="${esc(store.get('omok.nick',''))}" placeholder="이름 또는 별명"></div>
-    <button class="btn pri" data-act="omk-new">새 방 만들기<small>코드가 생기면 친구에게 보내세요</small></button>
+    <button class="btn pri" data-act="omk-quick">🎲 빠른 매칭<small>전 세계 대기 중인 사람과 바로 한 판</small></button>
+    <button class="btn sec" data-act="omk-new">친구와 방 만들기<small>코드가 생기면 카톡으로 보내세요</small></button>
     <div class="field"><label for="f_code">받은 방 코드로 들어가기</label><input id="f_code" maxlength="8" autocomplete="off" autocapitalize="characters" value="${esc(String(code||'').toUpperCase())}" placeholder="예: K7QM"></div>
     <button class="btn sec" data-act="omk-join">코드로 입장</button>
     <p class="err" id="ferr" hidden></p>
-    <p class="small-note">온라인 대전은 claude.ai에 로그인하고 이 페이지에 초대받은 사람끼리 연결돼요.</p>`,{color:g.color,foot:`<button class="btn ghost" data-act="setup">뒤로</button>`});
+    <p class="small-note">빠른 매칭은 먼저 기다리던 사람과 순서대로 짝이 돼요. 이름 옆에는 나라 국기가 보여요.</p>`,{color:g.color,foot:`<button class="btn ghost" data-act="setup">뒤로</button>`});
   if(code){ const j=ov.querySelector('[data-act="omk-join"]'); if(j) j.className='btn pri'; } }
+
+/* ---------- 실시간 방 (Supabase Realtime) — claude 밖(breakpocket.com)에서도 온라인 대전 ---------- */
+let SBRT=null; function sbRT(){ if(SBRT) return SBRT; SBRT=new Promise((ok,no)=>{ if(window.supabase&&window.supabase.createClient) return ok(window.supabase.createClient(SB.url,SB.key,{auth:{persistSession:false}})); const sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js'; sc.onload=()=>{ try{ ok(window.supabase.createClient(SB.url,SB.key,{auth:{persistSession:false}})); }catch(e){ no(e); } }; sc.onerror=()=>{ SBRT=null; no(new Error('load')); }; document.head.appendChild(sc); }); return SBRT; }
+/* claude 'room'과 같은 모양: join(name) → {presence, onPeers, peers, leave} */
+async function supaRoom(name){ const cl=await sbRT(), me=sbDev()+Math.random().toString(36).slice(2,6); const ch=cl.channel(name,{config:{presence:{key:me}}}); let fns=[];
+  const list=()=>{ const st=ch.presenceState(); return Object.entries(st).map(([k,a])=>({peer:k,presence:(a&&a[a.length-1])||{},sameTab:k===me})); };
+  ch.on('presence',{event:'sync'},()=>{ const P=list(); fns.forEach(f=>{ try{ f({peers:P}); }catch(e){} }); });
+  await new Promise((ok,no)=>{ const tm=setTimeout(()=>no(new Error('timeout')),9000); ch.subscribe(st=>{ if(st==='SUBSCRIBED'){ clearTimeout(tm); ok(); } else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'){ clearTimeout(tm); no(new Error(st)); } }); });
+  return {me, presence:o=>ch.track(o), onPeers:f=>{ fns.push(f); }, peers:list, leave:async()=>{ fns=[]; try{ await ch.untrack(); }catch(e){} try{ await cl.removeChannel(ch); }catch(e){} } }; }
+/* 빠른 매칭: 대기실에 들어가 먼저 온 사람끼리 둘씩 짝 → 앞사람이 방을 만들고 코드를 넘김 */
+const QM={r:null,busy:false};
+async function omkQuick(){ if(QM.busy) return; QM.busy=true; const nick=String((document.getElementById('f_nick')||{}).value||store.get('omok.nick','')||sbName()).trim().slice(0,12); store.set('omok.nick',nick);
+  const g=cur; showOv(`<div class="ovhead"><span class="ovtag">${g.name} · 빠른 매칭</span><h2>상대를 찾는 중…</h2></div><p class="ovdesc" id="qmtx">전 세계 대기실에 들어가는 중이에요</p><div class="qmspin" aria-hidden="true"></div>`,{color:g.color,foot:`<button class="btn ghost" data-act="omk-qcancel">그만 찾기</button>`});
+  let r; try{ r=await supaRoom('omok-lobby'); }catch(e){ QM.busy=false; const t=document.getElementById('qmtx'); if(t) t.textContent='지금은 매칭 서버에 연결할 수 없어요. 방 코드로 친구와 하거나 CPU와 대전해 보세요.'; return; }
+  QM.r=r; const t0=Date.now(); let done=false; await r.presence({t:t0,nick,cc:myCC(),v:1}).catch(()=>{});
+  const go=async(code,host)=>{ if(done) return; done=true; await r.leave(); QM.r=null; QM.busy=false; if(cur!==Omok) return; let ok=false; try{ ok=await Omok.netStart(code,host,nick); }catch(e){} if(!ok){ const tx=document.getElementById('qmtx'); if(tx) tx.textContent='연결에 실패했어요. 다시 시도해 주세요.'; return; } begin('online'); };
+  r.onPeers(({peers})=>{ if(done) return; const W0=peers.filter(p=>p.presence&&p.presence.t).sort((a,b)=>(a.presence.t-b.presence.t)||(a.peer<b.peer?-1:1)); const tx=document.getElementById('qmtx'); if(tx) tx.textContent=`대기 중 ${W0.length}명 · ${Math.round((Date.now()-t0)/1000)}초`;
+    const asked=W0.find(p=>p.presence.pair===r.me&&p.presence.code); if(asked){ go(asked.presence.code,false); return; }
+    const free=W0.filter(p=>!p.presence.pair), i=free.findIndex(p=>p.peer===r.me); if(i>=0&&i%2===0&&free[i+1]){ const A='abcdefghjkmnpqrstuvwxyz23456789'; let code='q'; for(let k=0;k<5;k++) code+=A[Math.floor(Math.random()*A.length)]; const op=free[i+1]; r.presence({t:t0,nick,cc:myCC(),v:1,pair:op.peer,code}).catch(()=>{}); setTimeout(()=>go(code,true),1200); } });
+}
+function omkQuit(){ if(QM.r){ QM.r.leave(); QM.r=null; } QM.busy=false; }
 async function omkGo(host,btn){ const ferr=msg=>{ const e=document.getElementById('ferr'); if(e){ e.textContent=msg; e.hidden=false; } };
   const nick=String((document.getElementById('f_nick')||{}).value||'').trim().slice(0,12); store.set('omok.nick',nick);
   let code='';
@@ -6941,7 +6966,7 @@ async function omkGo(host,btn){ const ferr=msg=>{ const e=document.getElementByI
   ov.querySelectorAll('[data-act^="omk-"]').forEach(x=>x.disabled=true); const t=btn.innerHTML; btn.textContent='연결하는 중…';
   let ok=false; try{ ok=await Omok.netStart(code,host,nick); }catch(e){ ok=false; }
   if(cur!==Omok) return;
-  if(!ok){ ov.querySelectorAll('[data-act^="omk-"]').forEach(x=>x.disabled=false); btn.innerHTML=t; ferr('지금 이 화면에서는 온라인 연결이 안 돼요. 온라인 대전은 claude.ai에 로그인하고 이 페이지에 초대받은 사람만 쓸 수 있어요. CPU 대전이나 한 기기 둘이서는 언제든 돼요.'); return; }
+  if(!ok){ ov.querySelectorAll('[data-act^="omk-"]').forEach(x=>x.disabled=false); btn.innerHTML=t; ferr('지금은 온라인 서버에 연결할 수 없어요. 잠시 뒤 다시 시도하거나 CPU 대전을 해 보세요.'); return; }
   begin('online'); }
 function bestShown(g){ const d=api.diff; return g.noDaily?store.get(streakKey(g.id,d),0):store.get(bestKey(g.id,d),0); }
 function pauseGame(){ paused=true; BGM.stop(); showOv(`<span class="ovtag">${cur.name}</span><h2>잠깐 멈춤</h2>${cur.id==='brick'?brickSet():''}<div class="btns"><button class="btn pri" data-act="unpause">계속하기</button>${cur.id==='castle'&&!Castle.duel&&!Castle.camp?`<button class="btn sec" data-act="crec">📌 지금 기록 남기기<small>점수 ${(Castle.score||0).toLocaleString()} · 웨이브 ${Castle.wave}${CTRIAL?'':` · 남은 기회 ${Math.max(0,cLives()-(Castle.deaths||0))}번`}</small></button>`:''}${mode==='online'?'':`<button class="btn sec" data-act="retry">${cur.id==='castle'?'새 게임 (지금 판 끝)':'처음부터'}</button>`}<button class="btn sec" data-act="mute">${muted?'소리 켜기':'소리 끄기'}</button><button class="btn sec" data-act="theme">${theme==='light'?'밤 모드로':'낮 모드로'}</button><button class="btn ghost" data-act="home">홈으로</button></div>`,{color:cur.color}); }
@@ -7086,11 +7111,15 @@ function copyShare(btn){ const t=shareText();
 /* ---------- share / invite (KakaoTalk-ready) ---------- */
 const SITE_URL='https://breakpocket.com/';
 let shareData={text:'',url:SITE_URL}, lastShare=null, challenge=null;
+/* 카카오톡 공유: Kakao Developers에서 받은 JavaScript 키를 여기에 (공개돼도 되는 키 · 등록한 도메인에서만 작동) */
+const KAKAO_KEY='';
+if(KAKAO_KEY&&/breakpocket\.com$/.test(location.hostname)){ const ks=document.createElement('script'); ks.src='https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js'; ks.crossOrigin='anonymous'; ks.onload=()=>{ try{ if(!Kakao.isInitialized()) Kakao.init(KAKAO_KEY); }catch(e){} }; document.head.appendChild(ks); }
 function openShare(title,text,url){ shareData={text,url:url||SITE_URL}; $('#shT').textContent=title; $('#shTx').textContent=text+'\n👉 '+shareData.url; $('#shN').textContent=''; $('#sheet').hidden=false; }
 function copyTo(t,note){ const n=$('#shN'); const fb=()=>{ const r=document.createRange(); r.selectNodeContents($('#shTx')); const sl=getSelection(); sl.removeAllRanges(); sl.addRange(r); n.textContent='자동 복사가 막혀 있어요. 선택된 글을 길게 눌러 복사하세요.'; };
   try{ navigator.clipboard.writeText(t).then(()=>{ n.textContent=note; buzz(15); },fb); }catch(e){ fb(); } }
 $('#shK').addEventListener('click',()=>{ const d=shareData, full=d.text+'\n👉 '+d.url;
-  if(window.Kakao&&Kakao.isInitialized&&Kakao.isInitialized()){ try{ Kakao.Share.sendDefault({objectType:'text',text:d.text,link:{mobileWebUrl:d.url,webUrl:d.url},buttonTitle:'한 판 하러 가기'}); return; }catch(e){} }
+  if(!(window.Kakao&&Kakao.isInitialized&&Kakao.isInitialized())&&navigator.share&&/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)){ navigator.share({title:'틈새 오락실',text:d.text,url:d.url}).catch(()=>{}); return; }
+  if(window.Kakao&&Kakao.isInitialized&&Kakao.isInitialized()){ try{ Kakao.Share.sendDefault({objectType:'feed',content:{title:'틈새 오락실 · BREAK Pocket',description:d.text.slice(0,200),imageUrl:SITE_URL.replace(/\/?$/,'/')+'og.png',link:{mobileWebUrl:d.url,webUrl:d.url}},buttons:[{title:'한 판 하러 가기',link:{mobileWebUrl:d.url,webUrl:d.url}}]}); return; }catch(e){} }
   copyTo(full,'복사했어요! 카카오톡 대화방에 붙여넣기 하면 초대 끝.'); });
 $('#shC').addEventListener('click',()=>copyTo(shareData.text+'\n👉 '+shareData.url,'메시지를 복사했어요.'));
 $('#shL').addEventListener('click',()=>copyTo(shareData.url,'링크를 복사했어요.'));
