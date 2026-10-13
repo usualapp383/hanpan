@@ -7340,6 +7340,7 @@ const Hanbok={
   down(p){ if(this.state==='home'){ for(const b of this.homeBtns()) if(this.hit(p,b)){ this.tapHome(b); return; } return; }
     if(this.state==='levels'){ for(const b of this.lvBtns()) if(this.hit(p,b)){ if(b.k==='back'){ this.state='home'; } else if(this.unlockedLv(b.i)) this.begin(b.i); else this.say('앞 단계를 먼저 깨 주세요'); sfx(500,.04,'triangle',.03); return; } return; }
     if(this.state==='done'){ if(this.doneT>.5) this.afterDone(); return; }
+    if(this.state==='reward'){ if(this.rewT>.8){ sfx(520,.04,'triangle',.03); this.rew=null; this.afterDone(); } return; }
     if(this.state!=='play') return;
     for(const b of this.btns()) if(this.hit(p,b)){ buzz(6); if(b.k==='list'){ this.state='levels'; this.ch=this.idx>>3; } else if(b.k==='undo') this.undoStep(true); else if(b.k==='reset') this.reset(); else this.useHint(); return; }
     const n=this.nodeAt(p); this.fx=p.x; this.fy=p.y;
