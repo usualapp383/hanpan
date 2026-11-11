@@ -1,4 +1,4 @@
-const V='hanpan-b40acc4e', CORE=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-512m.png'];
+const V='hanpan-47f29d81', CORE=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-512m.png'];
 self.addEventListener('install',e=>{ e.waitUntil(caches.open(V).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())); });
 self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('hanpan-')&&k!==V).map(k=>caches.delete(k)))).then(()=>self.clients.claim())); });
 self.addEventListener('fetch',e=>{ const u=new URL(e.request.url); if(e.request.method!=='GET') return;
@@ -9,5 +9,5 @@ self.addEventListener('fetch',e=>{ const u=new URL(e.request.url); if(e.request.
   const nav=e.request.mode==='navigate'||u.pathname==='/'||u.pathname.endsWith('.html');
   const net=(nav?fetch(e.request.url,{cache:'no-cache',credentials:'same-origin'}):fetch(e.request)).then(r=>{ if(r.ok){ const cp=r.clone(); caches.open(V).then(c=>c.put(e.request,cp)); } return r; });
   const fb=()=>caches.match(e.request,{ignoreSearch:nav}).then(r=>r||(nav?caches.match('./index.html'):null));
-  e.respondWith(new Promise(res=>{ let done=0; const tm=setTimeout(()=>fb().then(r=>{ if(r&&!done){ done=1; res(r); } }),nav?3500:6000);
+  e.respondWith(new Promise(res=>{ let done=0; const tm=setTimeout(()=>fb().then(r=>{ if(r&&!done){ done=1; res(r); } }),nav?7000:8000);
     net.then(r=>{ if(!done){ done=1; clearTimeout(tm); res(r); } }).catch(()=>fb().then(r=>{ if(!done){ done=1; clearTimeout(tm); res(r||Response.error()); } })); })); });
