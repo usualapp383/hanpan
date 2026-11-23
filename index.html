@@ -403,6 +403,20 @@ html body .acbar .acb2{box-shadow:none!important}
 /* v416 줄바꿈으로 잘림 해결(디자인 값 그대로) */
 html body .ovc.lobby .ovfoot>.btn.sec small{-webkit-line-clamp:2}
 html body #ov .vchips button[data-act="cvil"]>span>small{-webkit-line-clamp:unset;display:block;overflow:visible}
+/* v419 깔끔하게: 대기 화면 단추 한 모양 · 터치에선 초점 테두리 숨김 · 바닥글 정돈 · 앱 설치 단추 */
+@media (hover:none) and (pointer:coarse){html body #ov .ovfoot .btn:focus,html body #ov .ovfoot .btn:focus-visible{outline:none!important}}
+html body #ov .ovfoot .btn.sec,html body #ov .ovfoot .btn.sec.duelbtn{border:1px solid rgba(255,255,255,.14)!important;background:rgba(255,255,255,.045)!important;box-shadow:none!important}
+html body #ov .ovfoot .btn.ghost{opacity:.85}
+html body .foot{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;font-size:12.5px;line-height:1.7;color:var(--mute);padding-top:22px}
+html body .foot .beta{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 8px;font-size:13px}
+html body .foot .beta b{font-weight:700;color:var(--ink)}
+html body .foot .pill{min-height:36px;padding:0 14px;font-size:13px}
+html body .foot .made{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:6px!important;padding-top:14px!important;width:100%}
+html body .foot .made b{font-size:13px;font-weight:700;color:var(--ink)}
+html body .foot .made a{text-decoration:none!important;color:var(--mute)!important;font-weight:600}
+html body .foot .made small{font-size:11.5px;line-height:1.7;opacity:.9}
+html body .foot .linkbtn{text-decoration:none;font-weight:600}
+html body #nh .nh-inst{display:flex;align-items:center;justify-content:center;min-height:44px;margin:14px auto 0;padding:0 20px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink)!important;font-weight:700;font-size:14px;text-decoration:none!important}
 </style><meta name="naver-site-verification" content="33cbab46a34e974fad59afd2665e8f42dc4edd9f" /></head><body><div id="boot" aria-hidden="true"><div class="bootc"><b>틈새 오락실</b><i></i></div></div><script>!function(){var e="";try{e=JSON.parse(localStorage.getItem("hanpan.lang")||'""')}catch(e){}var a={en:"en.860edaf770.js",ja:"ja.8ce4bced82.js",zh:"zh.4cc083feef.js",es:"es.b8f6835e29.js"},n=String(navigator.language||"ko").toLowerCase(),s="ko"===e||a[e]?e:0===n.indexOf("ko")?"ko":0===n.indexOf("ja")?"ja":0===n.indexOf("zh")?"zh":0===n.indexOf("es")?"es":"en";a[s]&&document.write('<script src="/i18n/'+a[s]+'"><\/script>')}();</script><script>setTimeout(function(){ document.body.classList.add('ready'); },12000);</script>
 <title>틈새 오락실 · BREAK Pocket — Pocket a break. Break a record.</title>
 <meta name="description" content="틈새 오락실(BREAK Pocket) — 설치도 로그인도 없이 폰에서 바로 하는 미니게임 60종. 성 지키기 디펜스, 몬스터 서바이벌, 윷놀이 · 투호 · 장구 장단 같은 전통놀이, 2인 대전, 가족 대항전, 사주 풀이 · 궁합 · 성격 테스트까지.">
