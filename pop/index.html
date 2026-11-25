@@ -8,7 +8,7 @@
 <link rel="canonical" href="https://breakpocket.com/pop/">
 <meta property="og:title" content="팡팡 미로 — 틈새 오락실">
 <meta property="og:description" content="최대 6명 미로 대전 · 폭죽 · 아이템 · 마지막 한 명이 승리">
-<meta property="og:image" content="https://breakpocket.com/og.png">
+<meta property="og:image" content="https://breakpocket.com/pop/cover.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:type" content="website"><meta property="og:url" content="https://breakpocket.com/pop/"><meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#1B2B1F">
 <link rel="icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -58,7 +58,15 @@ input.in{min-height:50px;border-radius:14px;border:1px solid var(--line);backgro
 .hud .tm{font-family:"Black Han Sans";font-size:20px;min-width:52px;text-align:right}
 .hud .x{border:0;background:#0008;border-radius:10px;min-width:40px;min-height:40px;color:#fff}
 #cv{touch-action:none;display:block;border-radius:12px}
-.pad{width:100%;max-width:640px;display:flex;justify-content:space-between;align-items:center;padding:8px 22px calc(14px + env(safe-area-inset-bottom));flex:1;min-height:150px}
+.stage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;width:100%;min-height:0}
+.cd{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:"Black Han Sans";font-size:84px;color:#fff;text-shadow:0 6px 0 #0006;pointer-events:none}
+.score{font-size:12px;color:var(--gold);font-weight:900;margin-left:2px}
+.chs{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:10px 0}
+.chs button{border:2px solid var(--line);background:var(--card);border-radius:14px;padding:4px 0;min-height:64px}
+.chs button.on{border-color:var(--gold);background:#3A3418}
+.chs button:disabled{opacity:.3}
+.chs canvas{width:40px;height:40px;display:block;margin:0 auto}
+.pad{width:100%;max-width:640px;display:flex;justify-content:space-between;align-items:center;padding:8px 22px calc(14px + env(safe-area-inset-bottom));min-height:170px}
 .joy{width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.12);position:relative;touch-action:none}
 .joy i{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px;border-radius:50%;background:rgba(255,255,255,.25)}
 .boom{width:104px;height:104px;border-radius:50%;border:0;background:radial-gradient(circle at 35% 30%,#FFD36A,#F25C2E);color:#fff;font-family:"Black Han Sans";font-size:22px;box-shadow:0 6px 0 #A33A14;touch-action:none}
@@ -76,7 +84,7 @@ input.in{min-height:50px;border-radius:14px;border:1px solid var(--line);backgro
 <body>
 <div class="wrap" id="app"></div>
 <div id="game"><div class="hud"><div class="pl" id="hpl"></div><div class="tm" id="htm">3:00</div><button class="x" id="hx" aria-label="나가기">✕</button></div>
-<canvas id="cv"></canvas>
+<div class="stage"><canvas id="cv"></canvas><div class="cd" id="cd"></div></div>
 <div class="pad"><div class="joy" id="joy"><i id="knob"></i></div><button class="boom" id="boom">팡!</button></div>
 <div class="over" id="over"><div class="box" id="obox"></div></div></div>
 <div class="toast" id="toast" role="status"></div>
@@ -112,12 +120,13 @@ function onMsg(p){
   if(!NET.host){if(p.k==="lob"){L=p.L;NET.last=Date.now();renderLobby()}else if(p.k==="s"){NET.last=Date.now();applySnap(p)}else if(p.k==="start"){L=p.L;startLocal(p.seed,p.grid)}return}
   if(p.k==="hello")hostJoin(p.id,p.nick);
   else if(p.k==="in"&&S){const pl=S.pl.find(x=>x.id===p.id);if(pl){pl.ix=Math.max(-1,Math.min(1,p.dx|0));pl.iy=Math.max(-1,Math.min(1,p.dy|0));if(p.b)pl.wantB=1}}
+  else if(p.k==="pick"){const pl=L.players.find(x=>x.id===p.id),c=p.ch|0;if(pl&&c>=0&&c<6&&!L.players.some(x=>x.ch===c&&x!==pl)){pl.ch=c;pushLobby()}}
   else if(p.k==="bye"){const i=L.players.findIndex(x=>x.id===p.id);if(i>=0){if(!S)L.players.splice(i,1);else{L.players[i].bot=1;const pl=S.pl.find(x=>x.id===p.id);if(pl)pl.bot=1}}pushLobby()}
 }
 /* ---------------- 대기실 ---------------- */
 let L=null; // {code,host,players:[{id,nick,bot,ch}]}
 function pushLobby(){renderLobby();send({k:"lob",L})}
-function hostJoin(id,nick){if(S){return}if(L.players.some(p=>p.id===id))return pushLobby();if(L.players.length>=6)return;const used=new Set(L.players.map(p=>p.ch));let ch=0;while(used.has(ch))ch++;L.players.push({id,nick:cleanNick(nick)||"손님",bot:0,ch});pushLobby();sfx(660,.1)}
+function hostJoin(id,nick){if(S){return}if(L.players.some(p=>p.id===id))return pushLobby();if(L.players.length>=6)return;const used=new Set(L.players.map(p=>p.ch));let ch=id===ME.id?(lsGet("pop.ch",0)|0):0;while(used.has(ch))ch=(ch+1)%6;L.players.push({id,nick:cleanNick(nick)||"손님",bot:0,ch});pushLobby();sfx(660,.1)}
 function addBots(){const used=new Set(L.players.map(p=>p.ch));for(let i=0;L.players.length<6&&i<6;i++){let ch=0;while(used.has(ch))ch++;used.add(ch);L.players.push({id:"bot"+Math.random().toString(36).slice(2,7),nick:BOTN[ch],bot:1,ch})}}
 setInterval(()=>{if(NET.host&&!NET.solo&&L&&!S)send({k:"lob",L});if(!NET.host&&!NET.solo&&NET.ch&&!S&&(!L||!L.players.some(p=>p.id===ME.id)))send({k:"hello",id:ME.id,nick:ME.nick});if(!NET.host&&!NET.solo&&NET.last&&Date.now()-NET.last>10000){NET.last=0;toast("방장 연결이 끊겼어요")}},2000);
 
@@ -128,7 +137,7 @@ function makeGrid(){const g=[];for(let y=0;y<GH;y++)for(let x=0;x<GW;x++){let c=
   return g.map(String).join("")}
 const SPAWN=[[1,1],[11,9],[11,1],[1,9],[5,5],[7,5]];
 function startLocal(seed,grid){
-  S={t:0,left:TLIM,grid:grid.split("").map(Number),items:{},bombs:[],flames:[],pl:L.players.map((p,i)=>({id:p.id,nick:p.nick,bot:p.bot,ch:p.ch,x:SPAWN[i][0],y:SPAWN[i][1],rx:SPAWN[i][0],ry:SPAWN[i][1],dir:2,alive:1,rng:2,max:1,spd:3.6,ix:0,iy:0,wantB:0,walk:0})),end:null,shrink:0,fx:[]};
+  S={t:-3,left:TLIM,grid:grid.split("").map(Number),items:{},bombs:[],flames:[],pl:L.players.map((p,i)=>({id:p.id,nick:p.nick,bot:p.bot,ch:p.ch,x:SPAWN[i][0],y:SPAWN[i][1],rx:SPAWN[i][0],ry:SPAWN[i][1],dir:2,alive:1,rng:2,max:1,spd:3.6,ix:0,iy:0,wantB:0,walk:0})),end:null,shrink:0,fx:[]};
   if(NET.solo||NET.host){/* 상자 아래 아이템 */for(let i=0;i<S.grid.length;i++)if(S.grid[i]===2&&Math.random()<.42)S.items[i]=pick(["r","r","b","b","s"])}
   showGame();
 }
@@ -152,7 +161,7 @@ function explode(b){
   sfx(120,.25,"sawtooth",.07,-60);buzz(20);
 }
 function step(dt){
-  if(!S||S.end)return;S.t+=dt;S.left=Math.max(0,TLIM-S.t);
+  if(!S||S.end)return;S.t+=dt;if(S.t<0)return;S.left=Math.max(0,TLIM-S.t);
   for(const p of S.pl){if(p.bot&&p.alive)botThink(p,dt);movePl(p,dt);if(p.wantB){placeBomb(p);p.wantB=0}}
   for(const b of S.bombs.slice()){b.t-=dt;if(b.t<=0)explode(b)}
   S.flames=S.flames.filter(f=>(f.t-=dt)>0);S.fx=S.fx.filter(f=>(f.t+=dt)<.5);
@@ -163,7 +172,7 @@ function step(dt){
   if(S.left<=0){S.shrink+=dt;const n=Math.floor(S.shrink/0.35);const ring=spiral();for(let k=S.sk||0;k<Math.min(n,ring.length);k++){const [x,y]=ring[k];S.grid[y*GW+x]=1;S.bombs=S.bombs.filter(b=>!(b.x===x&&b.y===y));for(const p of S.pl)if(p.alive&&Math.round(p.x)===x&&Math.round(p.y)===y){p.alive=0}}S.sk=Math.min(n,ring.length)}
   const al=S.pl.filter(p=>p.alive);if(S.pl.length>1&&al.length<=1&&!S.endT){S.endT=S.t+1.2}
   if(S.pl.length===1&&!al.length&&!S.endT)S.endT=S.t+1.2;
-  if(S.endT&&S.t>=S.endT){const w=S.pl.filter(p=>p.alive);S.end={w:w.length===1?w[0].id:null}}
+  if(S.endT&&S.t>=S.endT){const w=S.pl.filter(p=>p.alive);S.end={w:w.length===1?w[0].id:null};L.wins=L.wins||{};if(S.end.w)L.wins[S.end.w]=(L.wins[S.end.w]||0)+1;S.end.wins=Object.assign({},L.wins);S.end.champ=Object.keys(L.wins).find(k=>L.wins[k]>=2)||null}
 }
 let SPR=null;function spiral(){if(SPR)return SPR;const r=[];let x0=1,y0=1,x1=GW-2,y1=GH-2;while(x0<=x1&&y0<=y1){for(let x=x0;x<=x1;x++)r.push([x,y0]);for(let y=y0+1;y<=y1;y++)r.push([x1,y]);for(let x=x1-1;x>=x0&&y1>y0;x--)r.push([x,y1]);for(let y=y1-1;y>y0&&x1>x0;y--)r.push([x0,y]);x0++;y0++;x1--;y1--}return SPR=r.filter(([x,y])=>!(x%2===0&&y%2===0))}
 
@@ -183,7 +192,7 @@ function botThink(p,dt){
 
 /* ---------------- 그리기 ---------------- */
 const cv=$("#cv"),cx2=cv.getContext("2d");let TS=32,DPR=1;
-function fit(){const w=Math.min(innerWidth-12,640),h=Math.min(innerHeight-(innerWidth>=900?80:250),9999);TS=Math.max(16,Math.floor(Math.min(w/GW,h/GH)));DPR=Math.min(2,devicePixelRatio||1);cv.width=GW*TS*DPR;cv.height=GH*TS*DPR;cv.style.width=GW*TS+"px";cv.style.height=GH*TS+"px"}
+function fit(){const w=Math.min(innerWidth-12,640),h=Math.min(innerHeight-(innerWidth>=900?80:240),9999);TS=Math.max(16,Math.floor(Math.min(w/GW,h/GH)));DPR=Math.min(2,devicePixelRatio||1);cv.width=GW*TS*DPR;cv.height=GH*TS*DPR;cv.style.width=GW*TS+"px";cv.style.height=GH*TS+"px"}
 addEventListener("resize",()=>S&&fit());
 function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
 function drawAnimal(c,ch,x,y,s,dir,walk,ghost){const C=CH[ch];c.save();c.translate(x,y);const bob=walk?Math.sin(walk*18)*s*.05:0;c.translate(0,bob);
@@ -232,19 +241,20 @@ function loop(ts){requestAnimationFrame(loop);if(!S)return;const dt=Math.min(.05
     if(S.end&&!S.shown)showEnd()}
   draw();hud()}
 requestAnimationFrame(loop);
-function snap(){return{k:"s",g:S.grid.join(""),it:S.items,b:S.bombs.map(b=>[b.x,b.y,+b.t.toFixed(2)]),f:S.flames.map(f=>[f.x,f.y,+f.t.toFixed(2),f.c]),p:S.pl.map(p=>[p.id,+p.x.toFixed(3),+p.y.toFixed(3),p.dir,p.alive,p.walk>0?1:0,p.rng,p.max]),l:Math.round(S.left),e:S.end}}
+function snap(){return{k:"s",g:S.grid.join(""),it:S.items,b:S.bombs.map(b=>[b.x,b.y,+b.t.toFixed(2)]),f:S.flames.map(f=>[f.x,f.y,+f.t.toFixed(2),f.c]),p:S.pl.map(p=>[p.id,+p.x.toFixed(3),+p.y.toFixed(3),p.dir,p.alive,p.walk>0?1:0,p.rng,p.max]),l:Math.round(S.left),e:S.end,t:+S.t.toFixed(2)}}
 function applySnap(m){if(!S)return;const prevB=S.bombs.length;S.grid=m.g.split("").map(Number);S.items=m.it||{};S.bombs=m.b.map(a=>({x:a[0],y:a[1],t:a[2]}));
   const newF=m.f.length>S.flames.length;S.flames=m.f.map(a=>({x:a[0],y:a[1],t:a[2],c:a[3]}));if(newF){sfx(120,.25,"sawtooth",.06,-60);buzz(15)}
   for(const a of m.p){const p=S.pl.find(x=>x.id===a[0]);if(!p)continue;if(p.alive&&!a[4])S.fx.push({x:p.x,y:p.y,t:0,k:"out"});p.x=a[1];p.y=a[2];p.dir=a[3];p.alive=a[4];p.walk=a[5]?(p.walk||0)+.016:0;p.rng=a[6];p.max=a[7]}
-  S.left=m.l;S.end=m.e}
-function hud(){const h=$("#hpl");if(!h||!S)return;const html=S.pl.map(p=>`<span class="${p.alive?"":"dead"}"><i style="background:${CH[p.ch].c}"></i>${esc(p.nick)}</span>`).join("");if(h._h!==html){h._h=html;h.innerHTML=html}
+  S.left=m.l;S.end=m.e;S.t=m.t}
+function hud(){const h=$("#hpl");if(!h||!S)return;const cd=$("#cd"),cv2=S.t<0?Math.ceil(-S.t):S.t<.7?"시작!":"";if(cd.textContent!==String(cv2)){cd.textContent=cv2;cv2&&sfx(cv2==="시작!"?880:520,.12)}const W2=(L&&L.wins)||{},html=S.pl.map(p=>`<span class="${p.alive?"":"dead"}"><i style="background:${CH[p.ch].c}"></i>${esc(p.nick)}${W2[p.id]?`<b class="score">${"★".repeat(W2[p.id])}</b>`:""}</span>`).join("");if(h._h!==html){h._h=html;h.innerHTML=html}
   const l=Math.ceil(S.left);$("#htm").textContent=l>0?Math.floor(l/60)+":"+String(l%60).padStart(2,"0"):"조여요!";const me=S.pl.find(p=>p.id===ME.id);if(me&&me.alive)$("#htm").title=`사거리 ${me.rng} · 폭죽 ${me.max}`}
 function showGame(){$("#game").classList.add("on");$("#over").classList.remove("on");S.shown=0;fit();sfx(660,.1)}
 function showEnd(){S.shown=1;const w=S.end.w,wp=S.pl.find(p=>p.id===w),me=S.pl.find(p=>p.id===ME.id);
-  $("#obox").innerHTML=`<p style="color:var(--mute);margin:0">${w===ME.id?"축하해요!":"판 끝"}</p><h2>${wp?esc(wp.nick)+" 승리!":"무승부!"}</h2>${wp?`<canvas id="wc" width="160" height="160" style="width:80px;height:80px"></canvas>`:""}<p class="note">${me&&w===ME.id?"마지막까지 살아남았어요 🎉":"다음 판엔 꼭!"}</p>${NET.host||NET.solo?`<div class="row"><button class="btn pri" id="again">한 판 더</button><button class="btn" id="quit">나가기</button></div>`:`<button class="btn" id="quit">나가기</button><p class="note">방장이 한 판 더를 누르면 다시 시작해요</p>`}`;
+  const ws=S.end.wins||{},champ=S.end.champ,cp=S.pl.find(p=>p.id===champ);if(S.end.wins)L.wins=Object.assign({},S.end.wins);
+  $("#obox").innerHTML=`<p style="color:var(--mute);margin:0">${champ?"3판 2선승 끝!":w===ME.id?"축하해요!":"판 끝"}</p><h2>${cp?esc(cp.nick)+" 최종 우승!":wp?esc(wp.nick)+" 승리!":"무승부!"}</h2><p class="note" style="margin:4px 0">${S.pl.map(p=>`${esc(p.nick)} ${"★".repeat(ws[p.id]||0)||"·"}`).join(" &nbsp; ")}</p>${wp?`<canvas id="wc" width="160" height="160" style="width:80px;height:80px"></canvas>`:""}<p class="note">${me&&w===ME.id?"마지막까지 살아남았어요 🎉":"다음 판엔 꼭!"}</p>${NET.host||NET.solo?`<div class="row"><button class="btn pri" id="again">${champ?"새 대결":"다음 판"}</button><button class="btn" id="quit">나가기</button></div>`:`<button class="btn" id="quit">나가기</button><p class="note">방장이 한 판 더를 누르면 다시 시작해요</p>`}`;
   $("#over").classList.add("on");if(wp){const c=$("#wc").getContext("2d");c.scale(2,2);drawAnimal(c,wp.ch,40,44,64,2,0)}sfx(w===ME.id?1046:330,.3);
-  const a=$("#again");a&&(a.onclick=()=>hostStart());$("#quit").onclick=()=>{leave();location.href="/pop/"}}
-function hostStart(){const grid=makeGrid();if(!NET.solo)send({k:"start",L,grid});startLocal(0,grid)}
+  const a=$("#again");a&&(a.onclick=()=>{if(champ)L.wins={};hostStart()});$("#quit").onclick=()=>{leave();location.href="/pop/"}}
+function hostStart(){const grid=makeGrid();L.wins=L.wins||{};if(!NET.solo)send({k:"start",L,grid});startLocal(0,grid)}
 $("#hx").onclick=()=>{if(confirm("판을 나갈까요?")){leave();location.href="/pop/"}};
 /* ---------------- 조작 ---------------- */
 const KEY={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],KeyW:[0,-1],KeyS:[0,1],KeyA:[-1,0],KeyD:[1,0]},held=[];
@@ -263,8 +273,8 @@ function renderLobby(){
   if(S&&$("#game").classList.contains("on"))return;
   const seats=[];for(let i=0;i<6;i++){const p=L.players[i];seats.push(p?`<div class="ls"><canvas data-ch="${p.ch}" width="88" height="88"></canvas><span class="nm">${esc(p.nick)}</span><small>${p.id===L.host?"방장":p.bot?"컴퓨터":CH[p.ch].n}</small></div>`:`<div class="ls empty">빈자리</div>`)}
   app.innerHTML=`<div class="top"><a href="/pop/">‹ 처음</a><span class="ttl">팡팡 미로</span></div>${NET.solo?"":`<p class="note" style="margin:6px 0 0">방 코드</p><div class="code">${esc(L.code)}</div><button class="btn" id="share">🔗 초대 링크 보내기</button>`}<div class="lseats">${seats.join("")}</div>
-  ${NET.host?`<div class="row"><button class="btn" id="bots" ${L.players.length>=6?"disabled":""}>컴퓨터로 채우기</button><button class="btn pri" id="go">시작하기</button></div>`:`<p class="note">방장이 시작하기를 기다리는 중…</p>`}<p class="note">움직이기: 왼쪽 원판(PC는 방향키) · 폭죽: 팡! 버튼(PC는 스페이스)</p>`;
-  app.querySelectorAll("canvas[data-ch]").forEach(c=>{const x=c.getContext("2d");x.scale(2,2);drawAnimal(x,+c.dataset.ch,22,24,34,2,0)});
+  <p class="note" style="margin:0">내 캐릭터 고르기</p><div class="chs">${CH.map((c,i)=>{const mine=(L.players.find(p=>p.id===ME.id)||{}).ch===i,taken=L.players.some(p=>p.ch===i&&p.id!==ME.id);return`<button data-pk="${i}" class="${mine?"on":""}" ${taken?"disabled":""} aria-label="${c.n}"><canvas data-ch="${i}" width="80" height="80"></canvas><small>${c.n}</small></button>`}).join("")}</div>${L.wins&&Object.keys(L.wins).length?`<p class="note">이번 대결 승수: ${L.players.map(p=>esc(p.nick)+" "+(L.wins[p.id]||0)).join(" · ")}</p>`:""}${NET.host?`<div class="row"><button class="btn" id="bots" ${L.players.length>=6?"disabled":""}>컴퓨터로 채우기</button><button class="btn pri" id="go">시작하기</button></div>`:`<p class="note">방장이 시작하기를 기다리는 중…</p>`}<p class="note">움직이기: 왼쪽 원판(PC는 방향키) · 폭죽: 팡! 버튼(PC는 스페이스)</p>`;
+  app.querySelectorAll("canvas[data-ch]").forEach(c=>{const x=c.getContext("2d");x.scale(2,2);const z=c.width/2;drawAnimal(x,+c.dataset.ch,z/2,z/2+1,z*.78,2,0)});app.querySelectorAll("[data-pk]").forEach(b=>b.onclick=()=>{const c=+b.dataset.pk;lsSet("pop.ch",c);if(NET.host||NET.solo){const me=L.players.find(p=>p.id===ME.id);if(me&&!L.players.some(p=>p.ch===c&&p!==me)){me.ch=c;pushLobby()}}else send({k:"pick",id:ME.id,ch:c});sfx(700,.06)});
   const sh=$("#share");sh&&(sh.onclick=()=>{const url=location.origin+"/pop/?r="+L.code,t="팡팡 미로 같이 해요! 방 코드 "+L.code;if(navigator.share)navigator.share({title:"팡팡 미로",text:t,url}).catch(()=>{});else{navigator.clipboard&&navigator.clipboard.writeText(t+" "+url);toast("링크를 복사했어요")}});
   const bt=$("#bots");bt&&(bt.onclick=()=>{addBots();pushLobby()});const go=$("#go");go&&(go.onclick=()=>{if(L.players.length<2)addBots();hostStart()});
 }
@@ -273,15 +283,17 @@ function renderHome(){
   app.innerHTML=`<div class="top"><a href="/">‹ 오락실</a></div><div class="hero"><h1>팡팡 미로</h1><p>폭죽을 놓아 친구를 잡아라 · 최대 6명</p></div>
   <div class="how"><div><i>🎇</i><b>폭죽 놓기</b>잠시 뒤 십자로 터져요</div><div><i>📦</i><b>상자 깨기</b>아이템이 숨어 있어요</div><div><i>🏆</i><b>끝까지 생존</b>마지막 한 명이 승리</div></div>
   <div class="field"><label for="nk">내 이름 (2~8자)</label><input class="in" id="nk" maxlength="8" value="${esc(ME.nick)}" placeholder="닉네임"></div>
+  <p class="note" style="margin:0;text-align:left;font-weight:700">내 캐릭터</p><div class="chs" id="hch">${CH.map((c,i)=>`<button data-hc="${i}" class="${(lsGet("pop.ch",0)|0)===i?"on":""}" aria-label="${c.n}"><canvas data-ch="${i}" width="80" height="80"></canvas><small>${c.n}</small></button>`).join("")}</div>
   <button class="btn pri" id="mk">방 만들기 (친구 초대)</button>
   <div class="row" style="margin-top:10px"><input class="in" id="jc" maxlength="4" placeholder="방 코드 4자리" value="${esc(r.toUpperCase())}" style="text-transform:uppercase"><button class="btn" id="jn" style="max-width:120px">들어가기</button></div>
   <button class="btn gold" id="solo" style="margin-top:10px">혼자 하기 · 컴퓨터 3명과</button>
-  <p class="note">🔥 사거리 늘리기 · ● 폭죽 하나 더 · » 빨라지기 · 3분이 지나면 바깥부터 벽이 조여 와요</p>
+  <p class="note">3판 2선승 · 🔥 사거리 늘리기 · ● 폭죽 하나 더 · » 빨라지기 · 3분이 지나면 바깥부터 벽이 조여 와요</p>
   <p class="foot"><a href="/">틈새 오락실</a> · 설치 없이 바로</p>`;
+  app.querySelectorAll("#hch canvas").forEach(c=>{const x=c.getContext("2d");x.scale(2,2);drawAnimal(x,+c.dataset.ch,20,21,31,2,0)});app.querySelectorAll("[data-hc]").forEach(b=>b.onclick=()=>{lsSet("pop.ch",+b.dataset.hc);app.querySelectorAll("[data-hc]").forEach(x=>x.classList.toggle("on",x===b));sfx(700,.06)});
   const nk=$("#nk"),getNick=()=>{const n=cleanNick(nk.value);if(n.length<2){toast("이름을 2자 이상 적어 주세요");nk.focus();return null}ME.nick=n;lsSet("hanpan.me.nick",n);return n};
   $("#mk").onclick=async()=>{if(!getNick())return;const code=Array.from({length:4},()=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[rnd(32)]).join("");NET.code=code;NET.host=true;$("#mk").disabled=true;try{await joinChannel(code)}catch(e){toast("연결하지 못했어요");$("#mk").disabled=false;return}L={code,host:ME.id,players:[]};hostJoin(ME.id,ME.nick);history.replaceState(null,"","/pop/?r="+code)};
   $("#jn").onclick=async()=>{if(!getNick())return;const code=($("#jc").value||"").toUpperCase().replace(/[^A-Z0-9]/g,"");if(code.length!==4)return toast("방 코드 4자리를 넣어 주세요");NET.code=code;$("#jn").disabled=true;try{await joinChannel(code)}catch(e){toast("연결하지 못했어요");$("#jn").disabled=false;return}send({k:"hello",id:ME.id,nick:ME.nick});toast("방을 찾는 중…");setTimeout(()=>{if(!L){toast("방을 찾지 못했어요");$("#jn").disabled=false}},6000)};
-  $("#solo").onclick=()=>{if(!getNick())return;NET.solo=true;NET.host=true;L={code:"",host:ME.id,players:[{id:ME.id,nick:ME.nick,bot:0,ch:0}]};for(let i=0;i<3;i++){L.players.push({id:"bot"+i,nick:BOTN[i+1],bot:1,ch:i+1})}hostStart()};
+  $("#solo").onclick=()=>{if(!getNick())return;NET.solo=true;NET.host=true;const mc=lsGet("pop.ch",0)|0;L={code:"",host:ME.id,wins:{},players:[{id:ME.id,nick:ME.nick,bot:0,ch:mc}]};let k=0;for(let i=0;i<3;i++){while(k===mc)k++;L.players.push({id:"bot"+i,nick:BOTN[k],bot:1,ch:k});k++}hostStart()};
 }
 renderHome();
 </script>

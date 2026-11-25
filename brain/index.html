@@ -8,7 +8,7 @@
 <link rel="canonical" href="https://breakpocket.com/brain/">
 <meta property="og:title" content="두뇌 서바이벌 — 틈새 오락실">
 <meta property="og:description" content="최대 6명 · 셈 탑 · 눈치 경매 · 다수결 함정 · 금고 거래 · 꼴찌는 탈락">
-<meta property="og:image" content="https://breakpocket.com/og.png">
+<meta property="og:image" content="https://breakpocket.com/brain/cover.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:type" content="website"><meta property="og:url" content="https://breakpocket.com/brain/"><meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0E0C1A">
 <link rel="icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -179,7 +179,7 @@ function solveBest(nums,target,tries){ // 컴퓨터용: 무작위로 식을 만�
 }
 
 /* ---------------- 게임 내용 ---------------- */
-const MINQ=[["짜장면","짬뽕","볶음밥"],["바다","산","도시"],["아침형","저녁형","그때그때"],["강아지","고양이","앵무새"],["여름","겨울","봄·가을"],["떡볶이","순대","튀김"],["버스","지하철","걷기"],["영화관","집에서 넷플릭스","공원 산책"],["커피","녹차","탄산음료"],["축구","야구","배구"],["엘리베이터","계단","에스컬레이터"],["치킨","피자","햄버거"]];
+const MINQ=[["짜장면","짬뽕","볶음밥"],["바다","산","도시"],["아침형","저녁형","그때그때"],["강아지","고양이","앵무새"],["여름","겨울","봄·가을"],["떡볶이","순대","튀김"],["버스","지하철","걷기"],["영화관","집에서 넷플릭스","공원 산책"],["커피","녹차","탄산음료"],["축구","야구","배구"],["엘리베이터","계단","에스컬레이터"],["치킨","피자","햄버거"],["라면에 계란","라면에 치즈","그냥 라면"],["비 오는 날","눈 오는 날","맑은 날"],["산책","낮잠","수다"],["전화","문자","직접 만나기"],["캠핑","호텔","집"],["김치찌개","된장찌개","부대찌개"],["드라마","예능","뉴스"],["초콜릿","사탕","젤리"],["노래방","볼링","당구"],["바다 수영","계곡","수영장"],["단팥빵","소보로","크림빵"],["새벽","한낮","한밤"],["사과","배","귤"],["자동차","기차","비행기"],["팥빙수","아이스크림","슬러시"],["동물원","수족관","식물원"],["택시","자전거","킥보드"],["봄나물","가을 단풍","겨울 눈꽃"]];
 const ROUNDS=[
  {k:"math",n:"셈 탑",ic:"🧮",rule:"같은 숫자 카드 6장으로 목표 수를 만드는 식을 세우세요. 카드마다 한 번씩만 쓸 수 있어요.",tip:"딱 맞히면 6칩 · 가까울수록 칩 · 가장 빨리 맞힌 사람 +2칩",x:1},
  {k:"auc",n:"눈치 경매",ic:"🪙",rule:"동전 10개로 상품 세 개에 몰래 값을 거세요. 가장 높게 건 사람이 가져가요. 단, 같은 값을 건 사람끼리는 둘 다 무효!",tip:"건 동전은 이겨도 져도 사라져요 · 남은 동전은 다음 상품에",x:1},
@@ -338,7 +338,7 @@ let UI={tok:[],bid:null,pick:null,vc:null,chat:[],screen:"home"};
 function seatsHTML(){return`<div class="seats">${G.players.map(p=>{const d=G.d||{},done=G.phase==="play"&&p.alive&&(d.sub&&d.sub[p.id]!=null);return`<div class="seat ${p.id===ME.id?"me":""} ${p.alive?"":"out"}"><div class="av" style="background:${p.col}">${esc(p.nick.slice(0,1))}${done?'<span class="ok">✓</span>':""}</div><span class="nm">${esc(p.nick)}</span><span class="ch">${p.chips}칩</span></div>`}).join("")}</div>`}
 function topHTML(){const R=ROUNDS[G.ri]||{};return`<div class="top"><a href="/" aria-label="틈새 오락실로">‹ 오락실</a><span class="ttl">두뇌 서바이벌</span><span class="rd">${G.ri>=0&&G.phase!=="end"?`${G.ri+1}/${ROUNDS.length} 라운드<br>${esc(R.n)}`:""}</span></div>`}
 function timerHTML(){return`<div class="timer"><i id="tbar"></i></div>`}
-function updTimer(){const e=$("#tbar");if(!e||!G||!G.dl)return;const tot=(G.phase==="intro"?T.intro:G.phase==="play"?(G.d.k==="math"?T.math:G.d.k==="auc"?T.auc:G.d.k==="min"?T.min:T.vault):G.phase==="elim"?T.elim:7)*1e3;const left=Math.max(0,G.dl-now());e.style.transform=`scaleX(${Math.min(1,left/tot)})`;const s=$("#tsec");if(s)s.textContent=Math.ceil(left/1e3)+"초"}
+function updTimer(){const e=$("#tbar");if(!e||!G||!G.dl)return;const tot=(G.phase==="intro"?T.intro:G.phase==="play"?(G.d.k==="math"?T.math:G.d.k==="auc"?T.auc:G.d.k==="min"?T.min:T.vault):G.phase==="elim"?T.elim:7)*1e3;const left=Math.max(0,G.dl-now());e.style.transform=`scaleX(${Math.min(1,left/tot)})`;const s=$("#tsec");if(s)s.textContent=Math.ceil(left/1e3)+"초";const sec=Math.ceil(left/1e3);if(G.phase==="play"&&sec<=5&&sec>0&&updTimer.last!==sec){updTimer.last=sec;sfx(sec<=2?1200:900,.05,"square",.03)}}
 const meP=()=>G&&G.players.find(p=>p.id===ME.id);
 let lastKey="";
 function render(){
@@ -418,7 +418,7 @@ function vaultHTML(R,d,out){
 function endHTML(){
   const r=G.players.slice().sort((a,b)=>(b.alive-a.alive)||(b.chips-a.chips));const w=r[0],mo=meP(),myRank=r.indexOf(mo)+1;
   return`<p class="ph">🏆 최종 결과</p><div class="elim"><div class="av" style="background:${w.col};animation:none">${esc(w.nick.slice(0,1))}</div><div class="big">${mo&&!mo.alive&&NET.solo?"탈락했어요":esc(w.nick)+" 우승!"}</div>${mo?`<p class="sub">내 순위 ${myRank}위 · ${mo.chips}칩</p>`:""}</div>
-  <div class="res">${r.map((p,i)=>`<div class="rr ${i===0?"win":""}"><span class="dot" style="background:${p.col}">${i+1}</span><span class="n">${esc(p.nick)}${p.alive?"":" · 탈락"}</span><span class="g">${p.chips}칩</span></div>`).join("")}</div>
+  <button class="btn" data-a="brag" style="margin:6px 0 10px">📣 결과 자랑하기</button><div class="res">${r.map((p,i)=>`<div class="rr ${i===0?"win":""}"><span class="dot" style="background:${p.col}">${i+1}</span><span class="n">${esc(p.nick)}${p.alive?"":" · 탈락"}</span><span class="g">${p.chips}칩</span></div>`).join("")}</div>
   ${NET.host?`<div class="row" style="margin-top:14px"><button class="btn pri" data-a="again">${NET.solo?"다시 도전":"한 판 더"}</button><button class="btn" data-a="home">나가기</button></div>`:`<div class="row" style="margin-top:14px"><button class="btn" data-a="home">나가기</button></div><p class="note">방장이 한 판 더를 누르면 다시 시작해요</p>`}`;
 }
 const QUICK=["좋아요 👍","나누기 할게요 🤝","믿어도 돼요","흠… 🤔","잘했어요 👏","한 판 더? 🔁"];
@@ -436,6 +436,7 @@ function bind(){
   app.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>doA(b.dataset.a));
 }
 function doA(a){
+  if(a==="brag"){const r=G.players.slice().sort((a,b)=>(b.alive-a.alive)||(b.chips-a.chips)),me=meP(),k=r.indexOf(me)+1,t=`두뇌 서바이벌 ${G.players.length}명 중 ${k}위! (${me?me.chips:0}칩) 나랑 붙어 볼래요?`,url=location.origin+"/brain/";if(navigator.share)navigator.share({title:"두뇌 서바이벌",text:t,url}).catch(()=>{});else{navigator.clipboard&&navigator.clipboard.writeText(t+" "+url);toast("복사했어요")}}
   if(a==="clr"){UI.tok=[];render()}
   if(a==="sub"){const s=UI.tok.map(t=>t.t==="n"?t.v:t.t==="o"?t.v:t.t).join("");act({t:"sub",tok:UI.tok,s});toast("제출했어요");sfx(780,.08)}
   if(a==="bid"&&UI.bid!=null){act({t:"bid",v:UI.bid});toast(UI.bid+"개 걸었어요");sfx(700,.06)}
