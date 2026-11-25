@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>잇기 승부 — 틈새 오락실</title>
+<meta name="description" content="번갈아 글자 돌을 놓고, 더는 못 잇겠다 싶으면 '불가능!'을 외치세요. 상대가 같은 글자끼리 모두 이어 보이면 상대 승리, 못 이으면 내 승리. 맵 15종 · 컴퓨터 · 한 폰 둘이 · 온라인.">
+<link rel="canonical" href="https://breakpocket.com/linkup/">
+<meta property="og:title" content="잇기 승부 — 틈새 오락실">
+<meta property="og:description" content="돌을 놓고 '불가능!'을 외쳐라 · 같은 글자끼리 이을 수 있을까?">
+<meta property="og:image" content="https://breakpocket.com/linkup/cover.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:type" content="website"><meta property="og:url" content="https://breakpocket.com/linkup/"><meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#151325">
+<link rel="icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#151325;--card:#211E38;--line:rgba(255,255,255,.1);--ink:#F5F2FF;--mute:#A9A3C9;--gold:#FFD23F;--coral:#FF6A5A;--mint:#3DD6B0}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",system-ui,sans-serif;word-break:keep-all}
+body{min-height:100dvh;background:radial-gradient(120% 60% at 50% -10%,#3A2E6E 0%,var(--bg) 60%)}
+button{font:inherit;color:inherit;cursor:pointer}
+.wrap{max-width:560px;margin:0 auto;padding:10px 16px calc(24px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;gap:10px;min-height:46px}.top a{color:var(--mute);text-decoration:none;font-size:14px;min-height:44px;display:inline-flex;align-items:center}.top .ttl{font-family:"Black Han Sans";font-size:21px;flex:1}.top .st{font-size:13px;color:var(--mute)}
+.hero{text-align:center;padding:24px 0 6px}.hero .kick{display:inline-block;font-size:12.5px;font-weight:900;color:#151325;background:var(--gold);border-radius:999px;padding:4px 12px;margin-bottom:10px}
+.hero h1{font-family:"Black Han Sans";font-weight:400;font-size:50px;margin:0;background:linear-gradient(180deg,#fff,#CDBBFF);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--mute);margin:6px 0 0;line-height:1.6}
+.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}.rules div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;font-size:12.5px;color:var(--mute);line-height:1.5;text-align:center}.rules b{display:block;color:var(--ink);font-size:14px}.rules i{font-style:normal;font-size:22px}
+.field{display:flex;flex-direction:column;gap:6px;margin:12px 0}.field label{font-size:13px;color:var(--mute);font-weight:700}
+input.in{min-height:50px;border-radius:14px;border:1px solid var(--line);background:#100E1E;color:var(--ink);padding:0 14px;font-size:17px;width:100%}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:54px;border-radius:16px;font-weight:900;font-size:17px;width:100%;background:var(--card);border:1px solid var(--line)}
+.btn.pri{background:linear-gradient(180deg,#8E6BFF,#6B47E8);border:0;box-shadow:0 6px 20px rgba(107,71,232,.35)}.btn.gold{background:linear-gradient(180deg,#FFD86A,#F2B630);color:#2A1C00;border:0}.btn.red{background:linear-gradient(180deg,#FF7A6A,#E2483A);border:0}
+.btn:disabled{opacity:.4}.row{display:flex;gap:10px}.row>*{flex:1}
+.note{color:var(--mute);font-size:13px;text-align:center;margin:10px 0;line-height:1.6}
+.won{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13.5px;color:var(--mute);margin:8px 0}.won i{width:8px;height:8px;border-radius:50%;background:#3DD68C;animation:pl 1.6s infinite}@keyframes pl{0%{box-shadow:0 0 0 0 #3DD68C99}70%{box-shadow:0 0 0 8px #3DD68C00}}
+.maps{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0}.maps button{border:2px solid var(--line);background:var(--card);border-radius:10px;padding:4px;min-height:58px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;color:var(--mute)}.maps button.on{border-color:var(--gold);color:var(--gold)}.maps canvas{width:36px;height:36px}
+.code{font-family:"Black Han Sans";font-size:44px;letter-spacing:.12em;text-align:center}
+.pls{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin:6px 0 8px}
+.pl{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px 10px;display:flex;flex-direction:column;align-items:center;font-size:13px}.pl b{font-size:15px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pl.turn{border-color:var(--gold);box-shadow:0 0 0 3px #FFD23F33}.pl small{color:var(--mute)}
+.vs{font-family:"Black Han Sans";color:var(--mute)}
+.msg{text-align:center;font-weight:700;font-size:15px;min-height:46px;display:flex;align-items:center;justify-content:center;line-height:1.45;padding:0 6px}
+.msg em{font-style:normal;color:var(--gold)}
+.boardw{display:flex;justify-content:center;margin:4px 0}
+#bd{touch-action:none;display:block;border-radius:14px}
+.lets{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:10px 0}.lets button{min-width:46px;min-height:46px;border-radius:12px;border:2px solid transparent;font-family:"Black Han Sans";font-size:22px;color:#151325}.lets button.on{border-color:#fff;box-shadow:0 0 0 3px #fff4}.lets button:disabled{opacity:.25}
+.timer{height:8px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin:6px 0}.timer i{display:block;height:100%;background:linear-gradient(90deg,var(--mint),var(--gold),var(--coral));transform-origin:left}
+.over{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:20;padding:20px}.over .box{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px;width:min(380px,100%);text-align:center}.over h2{font-family:"Black Han Sans";font-weight:400;font-size:34px;margin:6px 0}
+.toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:#000c;padding:8px 14px;border-radius:999px;font-size:14px;z-index:30;opacity:0;transition:.2s;pointer-events:none;max-width:90vw}.toast.on{opacity:1}
+.foot{color:var(--mute);font-size:12px;text-align:center;margin-top:16px}.foot a{color:var(--mute)}
+.tag{display:inline-block;font-size:11px;background:#0006;border-radius:6px;padding:1px 6px;color:var(--mute);margin-left:4px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="toast" id="toast" role="status"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js" defer></script>
+<script>
+"use strict";
+const SB_URL="https://bbwftbmqrfcnwydlqevm.supabase.co",SB_KEY="sb_publishable_uVa2-JR72UE8IaKQRs1b_g_CdYYLGiK";
+const $=s=>document.querySelector(s),app=$("#app");
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const rnd=n=>Math.floor(Math.random()*n),pick=a=>a[rnd(a.length)];
+const NG=/(시발|씨발|ㅅㅂ|ㅆㅂ|병신|ㅂㅅ|좆|존나|섹스|자지|보지|창녀|fuck|shit|bitch|sex|porn)/gi;
+function lsGet(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),2400)}
+const cleanNick=s=>String(s||"").replace(/[<>"'`]/g,"").replace(NG,"").trim().slice(0,8);
+const ME={id:lsGet("lk.id",null)||Math.random().toString(36).slice(2,10),nick:cleanNick(lsGet("hanpan.me.nick",""))};lsSet("lk.id",ME.id);
+function sfx(f,d,type,v,sl){try{const A=sfx.A||(sfx.A=new(window.AudioContext||window.webkitAudioContext)),o=A.createOscillator(),g=A.createGain();o.type=type||"triangle";o.frequency.setValueAtTime(f,A.currentTime);if(sl)o.frequency.exponentialRampToValueAtTime(Math.max(30,f+sl),A.currentTime+(d||.1));g.gain.setValueAtTime(v||.05,A.currentTime);g.gain.exponentialRampToValueAtTime(.0001,A.currentTime+(d||.12));o.connect(g).connect(A.destination);o.start();o.stop(A.currentTime+(d||.12))}catch(e){}}
+
+/* ---------------- 맵 15종 ('#' 막힘) ---------------- */
+const MK=(w,h,f)=>{const r=[];for(let y=0;y<h;y++){let s="";for(let x=0;x<w;x++)s+=f(x,y,w,h)?"#":".";r.push(s)}return r};
+const MAPS=[
+ ["열린 마당",MK(6,6,()=>0)],
+ ["넓은 마당",MK(7,7,()=>0)],
+ ["가운데 문",MK(7,7,(x,y)=>y===3&&(x<2||x>4))],
+ ["좁은 문",MK(7,7,(x,y)=>x===3&&y!==3)],
+ ["계단",MK(7,7,(x,y)=>x+y===6&&x%2===0||(x+y===7&&x%2===1&&x<6))],
+ ["십자 기둥",MK(7,7,(x,y)=>(x===3&&(y===2||y===4))||(y===3&&(x===2||x===4))||(x===3&&y===3))],
+ ["고리",MK(7,7,(x,y)=>x>=2&&x<=4&&y>=2&&y<=4&&!(x===3&&y===4))],
+ ["두 방",MK(8,6,(x,y)=>x===4&&y!==1&&y!==4)],
+ ["지그재그",MK(7,7,(x,y)=>(y===1&&x<5)||(y===3&&x>1)||(y===5&&x<5))],
+ ["기둥 숲",MK(7,7,(x,y)=>x%2===1&&y%2===1&&!(x===3&&y===3))],
+ ["모래시계",MK(7,7,(x,y)=>(y<3&&(x<y||x>6-y))||(y>3&&(x<6-y||x>y)))],
+ ["다이아",MK(7,7,(x,y)=>Math.abs(x-3)+Math.abs(y-3)>4)],
+ ["작은 미로",MK(8,8,(x,y)=>(x===2&&y<5)||(x===5&&y>2)||(y===7&&x===3))],
+ ["두 섬",MK(8,7,(x,y)=>(x===3||x===4)&&y!==1&&y!==5)],
+ ["큰 마당",MK(8,8,()=>0)]];
+const LET="ABCDEF",LCOL=["#FFD23F","#6FA8FF","#3DD6B0","#FF8FA8","#FF9F5A","#B79BFF"];
+
+/* ---------------- 판 ---------------- */
+// G: {mi,W,H,blk:[], st:{idx:letter}, turn:0|1, n (놓은 수), phase:'place'|'prove'|'end', prover, caller, path:{}, win, dl, players:[{id,nick,bot}], first}
+let G=null,UI={sel:null,let:"A",paint:null,placed:[]};
+function newBoard(mi){const m=MAPS[mi][1];const W=m[0].length,H=m.length,blk=[];for(let y=0;y<H;y++)for(let x=0;x<W;x++)blk.push(m[y][x]==="#"?1:0);return{mi,W,H,blk,st:{},n:0}}
+const usedLetters=g=>[...new Set(Object.values(g.st))].sort();
+const nextLetter=g=>{const u=usedLetters(g);return LET[u.length]||null};
+function allowedLetters(g){const u=usedLetters(g),nx=nextLetter(g);return nx?u.concat(nx):u}
+/* 증명 확인: 같은 글자 돌이 모두 이어졌나, 길이 겹치지 않나 */
+function check(g,path){const W=g.W,H=g.H,own={};for(const i in g.st)own[i]=g.st[i];for(const i in path){if(g.blk[i]||g.st[i]!=null)return{ok:false,why:"막힌 칸이나 돌 위에는 길을 놓을 수 없어요"};own[i]=path[i]}
+  const res={ok:true,bad:[]};for(const L of usedLetters(g)){const st=Object.keys(g.st).filter(i=>g.st[i]===L).map(Number);if(st.length<2)continue;const seen=new Set([st[0]]),q=[st[0]];while(q.length){const c=q.pop(),x=c%W,y=(c/W)|0;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(!seen.has(k)&&own[k]===L){seen.add(k);q.push(k)}}}if(!st.every(s=>seen.has(s))){res.ok=false;res.bad.push(L)}}
+  return res}
+/* 컴퓨터 풀이: 글자별로 돌을 하나씩 이어 붙이며 되돌아가기 */
+function solve(g,budget){const W=g.W,H=g.H,N=W*H,occ=new Array(N).fill(null);for(let i=0;i<N;i++)if(g.blk[i])occ[i]="#";for(const i in g.st)occ[i]=g.st[i];
+  const tasks=[];for(const L of usedLetters(g)){const st=Object.keys(g.st).filter(i=>g.st[i]===L).map(Number);if(st.length<2)continue;tasks.push({L,st})}
+  tasks.sort((a,b)=>spread(a.st)-spread(b.st));function spread(s){let m=0;for(const a of s)for(const b of s)m=Math.max(m,Math.abs(a%W-b%W)+Math.abs(((a/W)|0)-((b/W)|0)));return m}
+  let nodes=0;const path={};
+  function paths(L,comp,target,lim){const out=[],seen=new Set();for(let a=0;a<lim*3&&out.length<lim;a++){const p=dij(comp,target,a===0?0:1.2);if(!p)break;const key=p.join(",");if(!seen.has(key)){seen.add(key);out.push(p)}}return out}
+  function dij(comp,target,noise){const N=W*H,dist=new Float64Array(N).fill(1e9),prev=new Int32Array(N).fill(-1),wt=new Float64Array(N);for(let i=0;i<N;i++)wt[i]=1+Math.random()*noise;const pq=[];for(const c of comp){dist[c]=0;pq.push([0,c])}
+    while(pq.length){let bi=0;for(let q=1;q<pq.length;q++)if(pq[q][0]<pq[bi][0])bi=q;const [d,c]=pq.splice(bi,1)[0];if(d>dist[c])continue;nodes++;
+      if(c===target){const r=[];let k=prev[c];while(k>=0&&dist[k]>0){r.push(k);k=prev[k]}return r}
+      const x=c%W,y=(c/W)|0;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(k!==target&&occ[k]!==null)continue;const nd=d+wt[k];if(nd<dist[k]){dist[k]=nd;prev[k]=c;pq.push([nd,k])}}}
+    return null}
+  function go(ti,si){if(nodes>budget)return false;if(ti>=tasks.length)return true;const t=tasks[ti];if(si>=t.st.length)return go(ti+1,1);
+    const comp=t.st.slice(0,si).concat(Object.keys(path).filter(i=>path[i]===t.L).map(Number));const tg=t.st[si];
+    if(adjacentTo(comp,tg))return go(ti,si+1);
+    for(const p of paths(t.L,comp,tg,6)){for(const c of p){occ[c]=t.L;path[c]=t.L}if(go(ti,si+1))return true;for(const c of p){occ[c]=null;delete path[c]}if(nodes>budget)return false}return false}
+  function adjacentTo(comp,tg){const x=tg%W,y=(tg/W)|0;return comp.some(c=>Math.abs(c%W-x)+Math.abs(((c/W)|0)-y)===1)}
+  const ok=go(0,1);return ok?{path:Object.assign({},path),nodes}:{unknown:1,nodes}}
+function solveHard(g,budget,tries){for(let k=0;k<tries;k++){const s=solve(g,budget);if(s.path)return s}return{unknown:1}}
+
+/* ---------------- 진행 ---------------- */
+const NET={host:false,solo:false,local:false,ch:null,code:"",sb:null,last:0,off:0};
+const PROVE_T=90;
+function startMatch(players,mi){const b=newBoard(mi);G=Object.assign(b,{players,turn:0,phase:"place",path:{},win:null,first:rnd(2),log:[]});G.turn=G.first;G.dl=0;UI={sel:null,let:"A",paint:null,placed:[]};push();botMaybe()}
+function cur(){return G.players[G.turn]}
+function meIdx(){if(NET.local)return G.turn;return G.players.findIndex(p=>p.id===ME.id)}
+function need(){return G.n===0?1:2}
+function doPlace(pi,stones){if(G.phase!=="place"||pi!==G.turn)return;const al=allowedLetters(G);let lets=usedLetters(G).length;
+  for(const [i,L] of stones){if(G.blk[i]||G.st[i]!=null)return;}
+  if(stones.length!==need()){return}
+  for(const [i,L] of stones){const al2=allowedLetters(G);if(!al2.includes(L))return;G.st[i]=L}
+  G.n++;G.last=pi;G.lastSt=stones.map(s=>s[0]);G.turn=1-G.turn;sfx(620,.06);push();botMaybe()}
+function doCall(pi){if(G.phase!=="place"||pi!==G.turn||G.n===0)return;G.phase="prove";G.caller=pi;G.prover=1-pi;G.path={};G.dl=Date.now()+PROVE_T*1e3;sfx(220,.3,"sawtooth",.06,-80);push();botMaybe()}
+function doProve(pi,path){if(G.phase!=="prove"||pi!==G.prover)return;const r=check(G,path);G.path=path;finish(r.ok?G.prover:G.caller,r.ok?"이어 냈어요!":"이어지지 않았어요")}
+function finish(w,why){G.phase="end";G.win=w;G.why=why;G.dl=0;push();sfx(w===meIdx()?1046:330,.3)}
+setInterval(()=>{if(!G)return;if((NET.host||NET.solo||NET.local)&&G.phase==="prove"&&G.dl&&Date.now()>G.dl)finish(G.caller,"시간 안에 잇지 못했어요");updTimer()},250);
+/* 컴퓨터 */
+function botMaybe(){if(!G||!(NET.solo||NET.host))return;const p=cur(),pv=G.players[G.prover];
+  if(G.phase==="place"&&p.bot)setTimeout(botPlace,900+rnd(700));
+  if(G.phase==="prove"&&pv&&pv.bot)setTimeout(()=>{const s=solveHard(G,40000,6);doProve(G.prover,s.path||{})},1600)}
+function botPlace(){if(!G||G.phase!=="place"||!cur().bot)return;const me=G.turn;
+  if(G.n>0){const s=solveHard(G,30000,4);if(!s.path&&Math.random()<.85)return doCall(me)}
+  const empty=[];for(let i=0;i<G.W*G.H;i++)if(!G.blk[i]&&G.st[i]==null)empty.push(i);
+  if(G.n===0){return doPlace(me,[[pick(empty),"A"]])}
+  if(empty.length<2)return doCall(me);
+  let best=null,bs=-1;for(let k=0;k<26;k++){const a=pick(empty);let b=pick(empty);if(a===b)continue;const al=allowedLetters(G),la=pick(al);const g2=JSON.parse(JSON.stringify({W:G.W,H:G.H,blk:G.blk,st:G.st}));g2.st[a]=la;const al2=allowedLetters(g2),lb=pick(al2);g2.st[b]=lb;const s=solveHard(g2,8000,2);if(!s.path)continue;const sc=s.nodes+Object.keys(s.path).length*8+Math.random()*40;if(sc>bs){bs=sc;best=[[a,la],[b,lb]]}}
+  if(!best)return doCall(me);doPlace(me,best)}
+
+/* ---------------- 네트워크 (친구 방 · 온라인) ---------------- */
+async function sbClient(){for(let i=0;i<40&&!window.supabase;i++)await new Promise(r=>setTimeout(r,150));if(!window.supabase)throw new Error("load");return NET.sb||(NET.sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false},realtime:{params:{eventsPerSecond:20}}}))}
+async function joinChannel(code){const sb=await sbClient();const ch=sb.channel("lk-"+code.toLowerCase(),{config:{broadcast:{self:false}}});ch.on("broadcast",{event:"m"},({payload})=>onMsg(payload));await new Promise((res,rej)=>{const t=setTimeout(()=>rej(new Error("t")),9000);ch.subscribe(s=>{if(s==="SUBSCRIBED"){clearTimeout(t);res()}else if(s==="CHANNEL_ERROR"||s==="TIMED_OUT"){clearTimeout(t);rej(new Error(s))}})});NET.ch=ch}
+function send(p){if(NET.solo||NET.local||!NET.ch)return;try{NET.ch.send({type:"broadcast",event:"m",payload:p})}catch(e){}}
+let LOB=null;// {code,host,players,pub,autoAt,msel}
+function push(){render();if(NET.host&&!NET.solo&&!NET.local)send({k:"st",G,LOB,now:Date.now()});if(LOB&&LOB.pub&&NET.host)worldTrack({room:LOB.code,open:G?0:1,n:LOB.players.length})}
+function act(a){if(NET.host||NET.solo||NET.local)return hostAct(a,meIdx());send({k:"act",id:ME.id,a})}
+function hostAct(a,pi){if(a.t==="place")doPlace(pi,a.s);if(a.t==="call")doCall(pi);if(a.t==="prove")doProve(pi,a.p)}
+function onMsg(p){if(!p||typeof p!=="object")return;
+  if(!NET.host){if(p.k==="st"){NET.last=Date.now();NET.off=Date.now()-p.now;const was=G&&G.phase;G=p.G;LOB=p.LOB;if(G&&was!==G.phase){UI.placed=[];UI.paint=null;if(G.phase==="prove")G.path=G.path||{}}render()}return}
+  if(p.k==="hello"){if(!LOB.players.some(x=>x.id===p.id)&&LOB.players.length<2&&!G){LOB.players.push({id:p.id,nick:cleanNick(p.nick)||"손님"});sfx(660,.1)}push();return}
+  if(p.k==="act"&&G){const pi=G.players.findIndex(x=>x.id===p.id);if(pi>=0)hostAct(p.a,pi)}
+  if(p.k==="bye"){if(!G)LOB.players=LOB.players.filter(x=>x.id!==p.id);else{const pi=G.players.findIndex(x=>x.id===p.id);if(pi>=0&&G.phase!=="end")finish(1-pi,"상대가 나갔어요")}push()}}
+setInterval(()=>{if(NET.host&&!NET.solo&&!NET.local&&NET.ch)send({k:"st",G,LOB,now:Date.now()});if(!NET.host&&NET.ch&&!G&&(!LOB||!LOB.players.some(p=>p.id===ME.id)))send({k:"hello",id:ME.id,nick:ME.nick});
+  if(NET.host&&LOB&&LOB.pub&&!G&&LOB.autoAt&&Date.now()>=LOB.autoAt){if(LOB.players.length<2)LOB.players.push({id:"bot",nick:"잇기왕",bot:1});startFromLobby()}
+  const ac=document.getElementById("autoc");if(ac&&LOB&&LOB.autoAt)ac.textContent=Math.max(0,Math.ceil((LOB.autoAt-Date.now())/1e3))},1000);
+function startFromLobby(){const mi=LOB.msel>=0?LOB.msel:rnd(MAPS.length);startMatch(LOB.players.map(p=>({id:p.id,nick:p.nick,bot:p.bot?1:0})),mi)}
+async function createRoom(pub){const code=Array.from({length:4},()=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[rnd(32)]).join("");NET.code=code;NET.host=true;try{await joinChannel(code)}catch(e){toast("연결하지 못했어요");return false}LOB={code,host:ME.id,players:[{id:ME.id,nick:ME.nick}],pub:pub?1:0,autoAt:pub?Date.now()+30000:0,msel:-1};history.replaceState(null,"","/linkup/?r="+code);push();return true}
+async function joinRoom(code){NET.code=code;NET.host=false;try{await joinChannel(code)}catch(e){toast("연결하지 못했어요");return false}send({k:"hello",id:ME.id,nick:ME.nick});toast("방을 찾는 중…");setTimeout(()=>{if(!LOB)toast("방을 찾지 못했어요")},6000);return true}
+async function quick(){toast("전 세계에서 상대를 찾는 중…");const r=await worldPick();if(r){await joinRoom(r.room);setTimeout(()=>{if(!LOB){try{NET.sb.removeChannel(NET.ch)}catch(e){}NET.ch=null;createRoom(1)}},5000)}else await createRoom(1)}
+function leave(){if(NET.ch){send({k:"bye",id:ME.id});try{NET.sb.removeChannel(NET.ch)}catch(e){}}}
+addEventListener("pagehide",leave);
+
+/* ---------------- 그리기 ---------------- */
+let CS=48,cv=null;
+function mapThumb(c,mi){const m=MAPS[mi][1],W=m[0].length,H=m.length,s=Math.min(c.width/W,c.height/H),x=c.getContext("2d");x.clearRect(0,0,c.width,c.height);for(let y=0;y<H;y++)for(let xx=0;xx<W;xx++){x.fillStyle=m[y][xx]==="#"?"#4A4470":"#CFC6FF";x.fillRect(xx*s+.5,y*s+.5,s-1,s-1)}}
+function drawBoard(){if(!cv||!G)return;const c=cv.getContext("2d"),W=G.W,H=G.H,dpr=Math.min(2,devicePixelRatio||1);c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W*CS,H*CS);
+  const path=G.phase==="prove"&&meIdx()===G.prover?(UI.paint||G.path||{}):(G.path||{});
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,X=x*CS,Y=y*CS;
+    if(G.blk[i]){c.fillStyle="#2A2648";rr(c,X+2,Y+2,CS-4,CS-4,8);c.fill();c.strokeStyle="#3A3560";c.lineWidth=2;c.beginPath();c.moveTo(X+8,Y+8);c.lineTo(X+CS-8,Y+CS-8);c.moveTo(X+CS-8,Y+8);c.lineTo(X+8,Y+CS-8);c.stroke();continue}
+    c.fillStyle=(x+y)%2?"#EEE9FF":"#E4DDFB";rr(c,X+2,Y+2,CS-4,CS-4,8);c.fill();
+    const L=path[i];if(L){const k=LET.indexOf(L);c.fillStyle=LCOL[k]+"88";rr(c,X+4,Y+4,CS-8,CS-8,8);c.fill()}}
+  // 길 잇기 선
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,L=path[i]||G.st[i];if(!L)continue;const col=LCOL[LET.indexOf(L)];c.strokeStyle=col;c.lineWidth=CS*.26;c.lineCap="round";for(const [dx,dy] of [[1,0],[0,1]]){const nx=x+dx,ny=y+dy;if(nx>=W||ny>=H)continue;const j=ny*W+nx,L2=path[j]||G.st[j];if(L2===L&&(path[i]||path[j])){c.beginPath();c.moveTo(X0(x),X0(y));c.lineTo(X0(nx),X0(ny));c.stroke()}}}
+  for(const k in G.st){const i=+k,x=i%W,y=(i/W)|0,L=G.st[k],col=LCOL[LET.indexOf(L)],R=CS*.36,cx=X0(x),cy=X0(y);
+    c.fillStyle="rgba(0,0,0,.22)";c.beginPath();c.ellipse(cx,cy+R*.75,R*.9,R*.3,0,0,7);c.fill();
+    const g=c.createRadialGradient(cx-R*.3,cy-R*.35,R*.1,cx,cy,R);g.addColorStop(0,"#fff");g.addColorStop(.25,col);g.addColorStop(1,shade(col,.7));c.fillStyle=g;c.beginPath();c.arc(cx,cy,R,0,7);c.fill();
+    c.fillStyle="#1B1630";c.font=`400 ${Math.round(CS*.4)}px "Black Han Sans"`;c.textAlign="center";c.textBaseline="middle";c.fillText(L,cx,cy+1);
+    if(G.lastSt&&G.lastSt.includes(i)&&G.phase==="place"){c.strokeStyle="#fff";c.lineWidth=2.5;c.beginPath();c.arc(cx,cy,R+4,0,7);c.stroke()}}
+  for(const [i,L] of UI.placed){const x=i%W,y=(i/W)|0,col=LCOL[LET.indexOf(L)],R=CS*.36;c.globalAlpha=.85;c.fillStyle=col;c.beginPath();c.arc(X0(x),X0(y),R,0,7);c.fill();c.globalAlpha=1;c.strokeStyle="#fff";c.setLineDash([5,4]);c.lineWidth=2.5;c.beginPath();c.arc(X0(x),X0(y),R+3,0,7);c.stroke();c.setLineDash([]);c.fillStyle="#1B1630";c.font=`400 ${Math.round(CS*.4)}px "Black Han Sans"`;c.textAlign="center";c.textBaseline="middle";c.fillText(L,X0(x),X0(y)+1)}}
+const X0=v=>v*CS+CS/2;
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+function shade(hex,f){const n=parseInt(hex.slice(1),16);const m=v=>Math.max(0,Math.min(255,Math.round(v*f)));return"#"+((1<<24)|(m(n>>16)<<16)|(m(n>>8&255)<<8)|m(n&255)).toString(16).slice(1)}
+function updTimer(){const e=$("#tbar");if(!e||!G||G.phase!=="prove")return;const now=NET.host||NET.solo||NET.local?Date.now():Date.now()-NET.off,left=Math.max(0,G.dl-now);e.style.transform=`scaleX(${left/(PROVE_T*1e3)})`;const s=$("#tsec");if(s)s.textContent=Math.ceil(left/1e3)+"초"}
+
+/* ---------------- 화면 ---------------- */
+function render(){if(!G){LOB?renderLobby():renderHome();return}
+  const me=meIdx(),p=G.players,R=MAPS[G.mi][0],myTurn=G.phase==="place"&&G.turn===me&&!p[me]?.bot,proving=G.phase==="prove"&&G.prover===me;
+  let msg="";
+  if(G.phase==="place")msg=myTurn?(G.n===0?"<em>A</em> 돌 하나를 놓으세요":"돌 <em>2개</em>를 놓거나, 못 이을 것 같으면 <em>불가능!</em>"):`${esc(p[G.turn].nick)} 차례 · ${G.n===0?"첫 돌을 놓는 중":"돌을 놓는 중"}…`;
+  if(G.phase==="prove")msg=proving?"<em>불가능</em>이래요! 같은 글자끼리 모두 이어 증명하세요":`${esc(p[G.prover].nick)}이(가) 잇는 중… 못 이으면 ${esc(p[G.caller].nick)} 승리`;
+  const lets=myTurn?allowedLettersWith():[],free=myTurn&&G.n>0;
+  app.innerHTML=`<div class="top"><a href="/linkup/" id="quit">‹ 나가기</a><span class="ttl">잇기 승부</span><span class="st">${esc(R)}</span></div>
+  <div class="pls">${[0,1].map(i=>`<div class="pl ${G.phase==="place"&&G.turn===i?"turn":""}"><b>${esc(p[i].nick)}${i===me&&!NET.local?" (나)":""}</b><small>${i===G.first?"선":"후"}${p[i].bot?" · 컴퓨터":""}</small></div>`).join('<span class="vs">VS</span>')}</div>
+  <div class="msg">${msg}</div>${G.phase==="prove"?`<div class="timer"><i id="tbar"></i></div><p class="note" style="margin:0"><span id="tsec"></span></p>`:""}
+  <div class="boardw"><canvas id="bd"></canvas></div>
+  ${myTurn?`<div class="lets">${lets.map(L=>`<button data-l="${L}" class="${UI.let===L?"on":""}" style="background:${LCOL[LET.indexOf(L)]}">${L}</button>`).join("")}</div><p class="note" style="margin:0">글자를 고르고 빈칸을 누르세요 · 놓은 돌을 다시 누르면 취소 (${UI.placed.length}/${need()})</p><div class="row" style="margin-top:10px">${free?`<button class="btn red" id="call">🚫 불가능!</button>`:""}<button class="btn pri" id="ok" ${UI.placed.length===need()?"":"disabled"}>놓기</button></div>`:""}
+  ${proving?`<div class="lets">${usedLetters(G).map(L=>`<button data-l="${L}" class="${UI.let===L?"on":""}" style="background:${LCOL[LET.indexOf(L)]}">${L}</button>`).join("")}</div><p class="note" style="margin:0">글자를 고르고 빈칸을 문질러 길을 칠하세요 · 칠한 칸을 다시 누르면 지워져요</p><div class="row" style="margin-top:10px"><button class="btn" id="clr">다시</button><button class="btn gold" id="prove">증명 끝!</button></div>`:""}
+  ${G.phase==="end"?endBox():""}`;
+  cv=$("#bd");const maxW=Math.min(innerWidth-32,528),maxH=innerHeight-(myTurn||proving?330:230);CS=Math.floor(Math.min(maxW/G.W,maxH/G.H,64));const dpr=Math.min(2,devicePixelRatio||1);cv.width=G.W*CS*dpr;cv.height=G.H*CS*dpr;cv.style.width=G.W*CS+"px";cv.style.height=G.H*CS+"px";drawBoard();updTimer();bindGame(myTurn,proving)}
+function allowedLettersWith(){const g={st:Object.assign({},G.st)};for(const [i,L] of UI.placed)g.st[i]=L;const al=allowedLetters(g);if(!al.includes(UI.let))UI.let=al[al.length-1];return G.n===0?["A"]:al}
+function endBox(){const w=G.win,me=meIdx(),you=NET.local?null:w===me;return`<div class="over"><div class="box"><p class="note" style="margin:0">${esc(G.why||"")}</p><h2>${NET.local?esc(G.players[w].nick)+" 승리!":you?"승리!":"아쉬워요!"}</h2><p class="note">${G.caller===w?"불가능 선언이 맞았어요":"이어 냈어요"} · ${esc(MAPS[G.mi][0])}</p><div class="row"><button class="btn pri" id="again">${NET.solo||NET.local||NET.host?"한 판 더":"나가기"}</button><button class="btn" id="seeb">판 보기</button></div></div></div>`}
+function bindGame(myTurn,proving){
+  app.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{UI.let=b.dataset.l;render()});
+  $("#quit").onclick=e=>{e.preventDefault();leave();location.href="/linkup/"};
+  const idx=e=>{const r=cv.getBoundingClientRect(),x=Math.floor((e.clientX-r.left)/CS),y=Math.floor((e.clientY-r.top)/CS);return x<0||y<0||x>=G.W||y>=G.H?-1:y*G.W+x};
+  if(myTurn){cv.onpointerdown=e=>{const i=idx(e);if(i<0||G.blk[i]||G.st[i]!=null)return;const k=UI.placed.findIndex(p=>p[0]===i);if(k>=0)UI.placed.splice(k,1);else if(UI.placed.length<need()){UI.placed.push([i,G.n===0?"A":UI.let]);sfx(520,.04)}render()};
+    const ok=$("#ok");ok&&(ok.onclick=()=>{act({t:"place",s:UI.placed});UI.placed=[]});const cl=$("#call");cl&&(cl.onclick=()=>{if(confirm(trS("불가능을 외칠까요? 상대가 이어 내면 지게 돼요")))act({t:"call"})})}
+  if(proving){UI.paint=UI.paint||Object.assign({},G.path||{});let mode=null;const paint=e=>{const i=idx(e);if(i<0||G.blk[i]||G.st[i]!=null)return;if(mode==null)mode=UI.paint[i]===UI.let?"erase":"paint";if(mode==="erase")delete UI.paint[i];else UI.paint[i]=UI.let;drawBoard()};
+    cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);mode=null;paint(e)};cv.onpointermove=e=>{if(e.buttons)paint(e)};cv.onpointerup=()=>{mode=null};
+    $("#clr").onclick=()=>{UI.paint={};drawBoard()};$("#prove").onclick=()=>{const r=check(G,UI.paint);if(!r.ok&&!confirm(trS("아직 안 이어진 글자가 있어요")+": "+r.bad.join(", ")+". "+trS("그래도 낼까요?")))return;act({t:"prove",p:UI.paint})}}
+  const ag=$("#again");ag&&(ag.onclick=()=>{if(NET.solo||NET.local)return startMatch(G.players,LOB&&LOB.msel>=0?LOB.msel:rnd(MAPS.length));if(NET.host){LOB.autoAt=LOB.pub?Date.now()+15000:0;G=null;push();return}leave();location.href="/linkup/"});
+  const sb=$("#seeb");sb&&(sb.onclick=()=>{$(".over").remove()});
+}
+function renderLobby(){const L=LOB;app.innerHTML=`<div class="top"><a href="/linkup/" id="quit">‹ 처음</a><span class="ttl">잇기 승부</span></div><p class="note" style="margin:6px 0 0">방 코드</p><div class="code">${esc(L.code)}</div><button class="btn" id="share">🔗 초대 링크 보내기</button>
+  ${L.pub?`<p class="note" style="color:var(--ink)">🌏 전 세계 공개 방 · <b id="autoc">${Math.max(0,Math.ceil((L.autoAt-Date.now())/1e3))}</b>초 뒤 시작<br><small>아무도 안 오면 컴퓨터와 겨뤄요</small></p>`:""}
+  <div class="pls">${[0,1].map(i=>{const p=L.players[i];return`<div class="pl">${p?`<b>${esc(p.nick)}</b><small>${p.id===L.host?"방장":"참가"}</small>`:`<b style="color:var(--mute)">빈자리</b><small>기다리는 중</small>`}</div>`}).join('<span class="vs">VS</span>')}</div>
+  ${NET.host?`<p class="note" style="margin:6px 0 0">맵</p>${mapPicker(L.msel)}<div class="row"><button class="btn" id="bot">컴퓨터와 하기</button><button class="btn pri" id="go" ${L.players.length<2?"disabled":""}>시작하기</button></div>`:`<p class="note">방장이 시작하기를 기다리는 중…</p>`}`;
+  drawThumbs();$("#quit").onclick=e=>{e.preventDefault();leave();location.href="/linkup/"};
+  $("#share").onclick=()=>shareSheet({title:"잇기 승부",text:"잇기 승부 한 판 해요! 방 코드 "+L.code,url:location.origin+"/linkup/?r="+L.code,img:location.origin+"/linkup/cover.jpg"});
+  app.querySelectorAll("[data-map]").forEach(b=>b.onclick=()=>{L.msel=+b.dataset.map;push()});
+  const go=$("#go");go&&(go.onclick=()=>startFromLobby());const bt=$("#bot");bt&&(bt.onclick=()=>{if(L.players.length<2)L.players.push({id:"bot",nick:"잇기왕",bot:1});startFromLobby()})}
+function mapPicker(sel){return`<div class="maps"><button data-map="-1" class="${sel<0?"on":""}"><span style="font-size:22px;line-height:36px">🎲</span>무작위</button>${MAPS.map((m,i)=>`<button data-map="${i}" class="${sel===i?"on":""}"><canvas data-th="${i}" width="72" height="72"></canvas>${esc(m[0])}</button>`).join("")}</div>`}
+function drawThumbs(){app.querySelectorAll("canvas[data-th]").forEach(c=>mapThumb(c,+c.dataset.th))}
+function renderHome(){const r=new URLSearchParams(location.search).get("r")||"";const ms=lsGet("lk.map",-1);
+  app.innerHTML=`<div class="top"><a href="/">‹ 오락실</a></div><div class="hero"><div class="kick">이을 수 있을까, 없을까</div><h1>잇기 승부</h1><p>번갈아 글자 돌을 놓다가, 못 잇겠다 싶으면<br><b>불가능!</b>을 외치세요</p></div>
+  <div class="rules"><div><i>🔤</i><b>돌 놓기</b>첫 수는 A 하나, 그다음부터 2개씩</div><div><i>🚫</i><b>불가능!</b>더는 못 이을 것 같으면 외치기</div><div><i>🧵</i><b>증명</b>상대가 이어 내면 상대 승리</div></div>
+  <div class="won" id="wonline"><i></i><span>접속자 확인 중…</span></div>
+  <div class="field"><label for="nk">내 이름 (2~8자)</label><input class="in" id="nk" maxlength="8" value="${esc(ME.nick)}" placeholder="닉네임"></div>
+  <button class="btn pri" id="qm">🌏 전 세계 빠른 대결</button>
+  <p class="note" style="margin:14px 0 0;text-align:left;font-weight:700">맵 15종</p>${mapPicker(ms)}
+  <div class="row"><button class="btn gold" id="solo">컴퓨터와 하기</button><button class="btn" id="local">한 폰으로 둘이</button></div>
+  <button class="btn" id="mk" style="margin-top:10px">👥 친구랑 방 만들기</button>
+  <div class="row" style="margin-top:10px"><input class="in" id="jc" maxlength="4" placeholder="방 코드 4자리" value="${esc(r.toUpperCase())}" style="text-transform:uppercase"><button class="btn" id="jn" style="max-width:120px">들어가기</button></div>
+  <p class="note">같은 글자 돌은 모두 하나로 이어져야 해요 · 길은 위아래양옆으로만, 다른 글자 길과 겹칠 수 없어요 · 증명 시간 90초</p><p class="foot"><a href="/">틈새 오락실</a> · 설치 없이 바로</p>`;
+  drawThumbs();worldUI();
+  const nk=$("#nk"),getNick=()=>{const n=cleanNick(nk.value);if(n.length<2){toast("이름을 2자 이상 적어 주세요");nk.focus();return null}ME.nick=n;lsSet("hanpan.me.nick",n);return n};let msel=ms;
+  app.querySelectorAll("[data-map]").forEach(b=>b.onclick=()=>{msel=+b.dataset.map;lsSet("lk.map",msel);app.querySelectorAll("[data-map]").forEach(x=>x.classList.toggle("on",x===b))});
+  $("#solo").onclick=()=>{if(!getNick())return;NET.solo=true;LOB={msel};startMatch([{id:ME.id,nick:ME.nick},{id:"bot",nick:"잇기왕",bot:1}],msel>=0?msel:rnd(MAPS.length))};
+  $("#local").onclick=()=>{NET.local=true;LOB={msel};startMatch([{id:"p1",nick:trS("빨강")},{id:"p2",nick:trS("파랑")}],msel>=0?msel:rnd(MAPS.length))};
+  $("#mk").onclick=async()=>{if(!getNick())return;$("#mk").disabled=true;if(!await createRoom(0))$("#mk").disabled=false;else{LOB.msel=msel;push()}};
+  $("#jn").onclick=async()=>{if(!getNick())return;const code=($("#jc").value||"").toUpperCase().replace(/[^A-Z0-9]/g,"");if(code.length!==4)return toast("방 코드 4자리를 넣어 주세요");$("#jn").disabled=true;if(!await joinRoom(code))$("#jn").disabled=false};
+  $("#qm").onclick=async()=>{if(!getNick())return;$("#qm").disabled=true;await quick()}}
+addEventListener("resize",()=>{if(G)render()});
+render();
+const WPFX="linkup";
+/* ---------------- 전 세계 대기실 (접속자 수 · 빠른 대결) ---------------- */
+var WORLD={ch:null,list:[],online:0,ready:false,me:{}};
+async function worldOn(){if(WORLD.ch||WORLD.busy)return;WORLD.busy=1;try{const sb=await sbClient();const ch=sb.channel(WPFX+"-world",{config:{presence:{key:ME.id}}});
+  ch.on("presence",{event:"sync"},()=>{const all=Object.values(ch.presenceState()).map(a=>a[a.length-1]||{});WORLD.online=all.length;WORLD.list=all.filter(x=>x.room&&x.open);WORLD.ready=true;worldUI()});
+  await new Promise((res,rej)=>{const t=setTimeout(()=>rej(new Error("t")),9000);ch.subscribe(s=>{if(s==="SUBSCRIBED"){clearTimeout(t);res()}else if(s==="CHANNEL_ERROR"||s==="TIMED_OUT"){clearTimeout(t);rej(new Error(s))}})});
+  WORLD.ch=ch;worldTrack()}catch(e){}WORLD.busy=0}
+function worldTrack(x){if(!WORLD)return;if(x)WORLD.me=Object.assign({},WORLD.me,x);WORLD.me.lang=LANG;if(!WORLD.ch)return;try{WORLD.ch.track(Object.assign({t:Date.now()},WORLD.me)).catch(()=>{})}catch(e){}}
+function worldUI(){const e=document.getElementById("wonline");if(!e||!WORLD)return;const n=Math.max(1,WORLD.online),r=WORLD.list.length;e.innerHTML=`<i></i><span>${esc(trS(`지금 ${n}명 접속 중`+(r?` · 열린 방 ${r}개`:"")))}</span>`}
+async function worldPick(){await worldOn();for(let i=0;i<10&&!WORLD.ready;i++)await new Promise(r=>setTimeout(r,250));const now=Date.now();
+  return WORLD.list.filter(r=>r.open&&r.n<6&&r.room!==NET.code&&now-r.t<180000).sort((a,b)=>((b.lang===LANG)-(a.lang===LANG))||(b.n-a.n))[0]||null}
+setTimeout(worldOn,600);
+const TRX=[[/지금 (\d+)명 접속 중/g,"$1 online now"],[/ · 열린 방 (\d+)개/g," · $1 open rooms"],[/(\d+)초/g,"$1s"]];
+const EN={"잇기 승부 — 틈새 오락실":"Link Duel — BREAK Pocket","잇기 승부":"Link Duel","틈새 오락실":"BREAK Pocket","‹ 오락실":"‹ Arcade","‹ 처음":"‹ Back","‹ 나가기":"‹ Leave","이을 수 있을까, 없을까":"Can it be linked or not?","번갈아 글자 돌을 놓다가, 못 잇겠다 싶으면":"Take turns placing letter stones. When you think they can't all be linked,","을 외치세요":"","불가능!":"Impossible!","불가능":"Impossible","돌 놓기":"Place stones","첫 수는 A 하나, 그다음부터 2개씩":"First move: one A, then two per turn","더는 못 이을 것 같으면 외치기":"Call it when linking looks impossible","증명":"Proof","상대가 이어 내면 상대 승리":"If they can link it, they win","접속자 확인 중…":"Checking who's online…","내 이름 (2~8자)":"Your name (2–8 chars)","닉네임":"Nickname","🌏 전 세계 빠른 대결":"🌏 Quick match (worldwide)","맵 15종":"15 maps","무작위":"Random","컴퓨터와 하기":"Play vs computer","한 폰으로 둘이":"Two on one phone","👥 친구랑 방 만들기":"👥 Room with friends","방 코드 4자리":"4-letter room code","들어가기":"Join","같은 글자 돌은 모두 하나로 이어져야 해요 · 길은 위아래양옆으로만, 다른 글자 길과 겹칠 수 없어요 · 증명 시간 90초":"All stones of the same letter must be linked · paths go up/down/left/right and can't cross other letters · 90s to prove","방 코드":"Room code","🔗 초대 링크 보내기":"🔗 Send invite link","🌏 전 세계 공개 방 · ":"🌏 Public room · starts in ","초 뒤 시작":"s","아무도 안 오면 컴퓨터와 겨뤄요":"If nobody joins, you'll play the computer","빈자리":"Empty","기다리는 중":"Waiting","방장":"Host","참가":"Player","맵":"Map","시작하기":"Start","방장이 시작하기를 기다리는 중…":"Waiting for the host…","돌 <em>2개</em>를 놓거나, 못 이을 것 같으면 <em>불가능!</em>":"Place <em>2</em> stones, or call <em>Impossible!</em>","돌 2개를 놓거나, 못 이을 것 같으면":"Place 2 stones, or call","돌 하나를 놓으세요":"place one stone"," 차례 · ":"'s turn · ","첫 돌을 놓는 중":"placing the first stone","돌을 놓는 중":"placing stones","이래요! 같은 글자끼리 모두 이어 증명하세요":" was called! Link every letter to prove it","이(가) 잇는 중… 못 이으면 ":" is linking… if not, "," 승리":" wins","글자를 고르고 빈칸을 누르세요 · 놓은 돌을 다시 누르면 취소":"Pick a letter, tap an empty cell · tap again to undo","놓기":"Place","🚫 불가능!":"🚫 Impossible!","글자를 고르고 빈칸을 문질러 길을 칠하세요 · 칠한 칸을 다시 누르면 지워져요":"Pick a letter and swipe empty cells to paint paths · tap a painted cell to erase","다시":"Clear","증명 끝!":"Done!","불가능을 외칠까요? 상대가 이어 내면 지게 돼요":"Call Impossible? If they can link it, you lose","아직 안 이어진 글자가 있어요":"Some letters aren't linked yet","그래도 낼까요?":"Submit anyway?","이어 냈어요!":"Linked!","이어지지 않았어요":"Not linked","시간 안에 잇지 못했어요":"Ran out of time","상대가 나갔어요":"Your opponent left","승리!":"You win!","아쉬워요!":"So close!","불가능 선언이 맞았어요":"The Impossible call was right","이어 냈어요":"It was linkable","한 판 더":"Play again","나가기":"Leave","판 보기":"View board","선":"1st","후":"2nd"," · 컴퓨터":" · CPU","(나)":"(me)","빨강":"Red","파랑":"Blue","잇기왕":"LinkBot","손님":"Guest","전 세계에서 상대를 찾는 중…":"Finding players worldwide…","연결하지 못했어요":"Couldn't connect","방을 찾는 중…":"Looking for the room…","방을 찾지 못했어요":"Room not found","이름을 2자 이상 적어 주세요":"Please enter at least 2 characters","방 코드 4자리를 넣어 주세요":"Enter the 4-letter room code","공유하기":"Share","친구 부르기":"Invite friends","카카오톡":"KakaoTalk","링크 복사":"Copy link","문자":"SMS","다른 앱":"Other apps","같이 하기":"Play together","링크를 복사했어요":"Link copied","복사했어요! 카카오톡 대화방에 붙여넣기 하면 돼요":"Copied! Paste it into a chat","닫기":"Close","잇기 승부 한 판 해요! 방 코드":"Let's play Link Duel! Room code","열린 마당":"Open Yard","넓은 마당":"Wide Yard","가운데 문":"Middle Gate","좁은 문":"Narrow Gate","계단":"Stairs","십자 기둥":"Cross Pillars","고리":"Ring","두 방":"Two Rooms","지그재그":"Zigzag","기둥 숲":"Pillar Forest","모래시계":"Hourglass","다이아":"Diamond","작은 미로":"Mini Maze","두 섬":"Two Islands","큰 마당":"Big Yard"};
+/* ---------------- 다른 언어 (화면 글자를 바꿔 보여 줘요) ---------------- */
+const LANG=(()=>{try{const v=JSON.parse(localStorage.getItem("hanpan.lang")||"null");if(v)return v==="ko"?"ko":"en"}catch(e){}return /^ko/i.test(navigator.language||"ko")?"ko":"en"})();
+const TRK=Object.keys(EN).sort((a,b)=>b.length-a.length);
+function trS(s){if(LANG==="ko"||!s||!/[가-힣]/.test(s))return s;for(const k of TRK){if(k.length<9)break;if(s.indexOf(k)>=0)s=s.split(k).join(EN[k])}for(const [re,to] of TRX)s=s.replace(re,to);for(const k of TRK){if(s.indexOf(k)<0)continue;if(k.length<=2&&/[가-힣]/.test(k)){s=s.replace(new RegExp("(^|[\\s·(])"+k+"(?=[\\s·)!?.,]|$)","g"),"$1"+EN[k])}else s=s.split(k).join(EN[k])}return s.replace(/\s{2,}/g," ")}
+function trDom(root){if(LANG==="ko"||!root)return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode()){const v=n.nodeValue;if(/[가-힣]/.test(v)){const t=trS(v);if(t!==v)n.nodeValue=t}}if(root.querySelectorAll)root.querySelectorAll("[placeholder],[aria-label],[title]").forEach(e=>{for(const a of["placeholder","aria-label","title"]){const v=e.getAttribute(a);if(v&&/[가-힣]/.test(v))e.setAttribute(a,trS(v))}})}
+if(LANG!=="ko"){document.documentElement.lang="en";document.title=trS(document.title);let q=0;new MutationObserver(()=>{if(q)return;q=1;requestAnimationFrame(()=>{q=0;trDom(document.body)})}).observe(document.body,{childList:true,subtree:true,characterData:true});addEventListener("DOMContentLoaded",()=>trDom(document.body));setTimeout(()=>trDom(document.body),0)}
+/* ---------------- 공유 (카카오톡 · 링크 복사 · 문자 · 다른 앱) ---------------- */
+const KAKAO_KEY="410872eac2f7e39bf3ddb064d2fc84dd";
+if(/breakpocket\.com$/.test(location.hostname)){const k=document.createElement("script");k.src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js";k.crossOrigin="anonymous";k.onload=()=>{try{Kakao.isInitialized()||Kakao.init(KAKAO_KEY)}catch(e){}};document.head.appendChild(k)}
+(()=>{const st=document.createElement("style");st.textContent=`.shs{position:fixed;inset:0;z-index:50;background:#0009;display:flex;align-items:flex-end;justify-content:center}.shs .sb{width:min(480px,100%);background:#fff;color:#1A1A22;border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));font-family:"Noto Sans KR",sans-serif;word-break:keep-all}.shs h3{margin:0 0 4px;font-size:18px}.shs p{margin:0 0 14px;color:#666;font-size:13.5px;line-height:1.5}.shs .gr{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.shs .gr button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12.5px;color:#333;min-height:76px;cursor:pointer}.shs .gr i{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-style:normal;font-size:24px}.shs .cl{margin-top:14px;width:100%;min-height:48px;border-radius:14px;border:0;background:#F1F1F4;font-weight:700;font-size:15px;color:#333}.shs .u{display:flex;gap:8px;align-items:center;background:#F4F4F7;border-radius:12px;padding:10px 12px;margin-bottom:14px;font-size:13px;color:#555;overflow:hidden}.shs .u span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}`;document.head.appendChild(st)})();
+function copyTxt(t){try{if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(t)}catch(e){}const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(e){}a.remove();return Promise.resolve()}
+function shareSheet(o){
+  const T=typeof trS==="function"?trS:(s=>s),title=T(o.title),text=T(o.text),url=o.url,full=text+"\n👉 "+url,mob=/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+  const w=document.createElement("div");w.className="shs";w.innerHTML=`<div class="sb" role="dialog" aria-label="${T("공유하기")}"><h3>${esc(T(o.head||"친구 부르기"))}</h3><p>${esc(text)}</p><div class="u"><span>${esc(url)}</span></div><div class="gr">
+  <button data-s="kakao"><i style="background:#FEE500;color:#191600">💬</i>${T("카카오톡")}</button>
+  <button data-s="copy"><i style="background:#E9F2FF">🔗</i>${T("링크 복사")}</button>
+  ${mob?`<button data-s="sms"><i style="background:#E7F8EC">✉️</i>${T("문자")}</button>`:""}
+  ${navigator.share?`<button data-s="more"><i style="background:#F1F1F4">⋯</i>${T("다른 앱")}</button>`:""}</div><button class="cl" data-s="x">${T("닫기")}</button></div>`;
+  document.body.appendChild(w);const close=()=>w.remove();
+  w.addEventListener("click",e=>{if(e.target===w)return close();const b=e.target.closest("[data-s]");if(!b)return;const s=b.dataset.s;
+    if(s==="x")return close();
+    if(s==="kakao"){if(window.Kakao&&Kakao.isInitialized&&Kakao.isInitialized()){try{Kakao.Share.sendDefault({objectType:"feed",content:{title,description:text.slice(0,200),imageUrl:o.img,link:{mobileWebUrl:url,webUrl:url}},buttons:[{title:T(o.btn||"같이 하기"),link:{mobileWebUrl:url,webUrl:url}}]});return close()}catch(e){}}copyTxt(full).then(()=>toast(T("복사했어요! 카카오톡 대화방에 붙여넣기 하면 돼요")));return close()}
+    if(s==="copy"){copyTxt(full).then(()=>toast(T("링크를 복사했어요")));return close()}
+    if(s==="sms"){location.href=(/iPhone|iPad/i.test(navigator.userAgent)?"sms:&body=":"sms:?body=")+encodeURIComponent(full);return close()}
+    if(s==="more"){navigator.share({title,text,url}).catch(()=>{});return close()}});
+}
+</script>
+</body>
+</html>
