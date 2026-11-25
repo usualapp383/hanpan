@@ -25,9 +25,13 @@ button{font:inherit;color:inherit;cursor:pointer}
 .top a{color:var(--mute);text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:4px;min-height:44px}
 .top .ttl{font-family:"Black Han Sans";font-size:22px;letter-spacing:0;flex:1}
 .top .rd{font-size:13px;color:var(--mute);text-align:right}
-.hero{text-align:center;padding:26px 0 8px}
+.hero{text-align:center;padding:30px 0 4px}
 .hero h1{font-family:"Black Han Sans";font-weight:400;font-size:44px;margin:0;letter-spacing:0;background:linear-gradient(180deg,#fff,#C9B8FF);-webkit-background-clip:text;background-clip:text;color:transparent}
 .hero p{color:var(--mute);margin:6px 0 0;font-size:15px}
+.kick{display:inline-block;font-size:12.5px;font-weight:900;letter-spacing:.08em;color:#14112A;background:var(--gold);border-radius:999px;padding:4px 12px;margin-bottom:10px}
+.path{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:16px 0 6px}.pp{display:inline-flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:13px;font-weight:700}.pp i{font-style:normal}.px{font-size:11px;font-weight:900;color:var(--coral);align-self:center;padding:0 2px}
+.won{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13.5px;color:var(--mute);margin:10px 0 4px}.won i{width:8px;height:8px;border-radius:50%;background:#3DD68C;animation:pl 1.6s infinite}@keyframes pl{0%{box-shadow:0 0 0 0 #3DD68C99}70%{box-shadow:0 0 0 8px #3DD68C00}}
+.btn.big2{min-height:62px;font-size:19px}
 .games{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:22px 0}
 .gm{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px}
 .gm b{display:block;font-size:15px}.gm small{color:var(--mute);font-size:12.5px;line-height:1.5;display:block;margin-top:3px}
@@ -218,7 +222,7 @@ const now=()=>NET.host||NET.solo?Date.now():Date.now()-NET.off;
 /* ---------------- 상태 (방장이 진행) ---------------- */
 let G=null;
 function newG(){return{phase:"lobby",ri:-1,players:[],dl:0,d:{},code:NET.code,host:ME.id,msg:""}}
-function push(){render();if(!NET.solo)send({k:"st",G,now:Date.now()})}
+function push(){if(G&&G.pub&&NET.host)worldTrack({room:G.code,open:G.phase==="lobby"?1:0,n:G.players.filter(p=>!p.bot).length});render();if(!NET.solo)send({k:"st",G,now:Date.now()})}
 function hostJoin(id,nick){
   if(G.players.some(p=>p.id===id)){push();return}
   if(G.phase!=="lobby"||G.players.length>=6){send({k:"st",G,now:Date.now()});return}
@@ -313,7 +317,7 @@ function tick(){
   if(!NET.host&&!NET.solo&&G&&NET.lastSt)tryTakeover(false);
   updTimer();
 }
-setInterval(tick,250);
+setInterval(tick,250);setInterval(()=>{if(NET.host&&G&&G.pub&&G.phase==="lobby"&&G.autoAt&&(Date.now()>=G.autoAt||G.players.length>=6)){addBots(6-G.players.length);startGame()}if(NET.host&&G&&G.pub&&G.phase==="end"&&!G.reT)G.reT=Date.now()+12000;if(NET.host&&G&&G.pub&&G.phase==="end"&&G.reT&&Date.now()>=G.reT){G.reT=0;G.players=G.players.filter(p=>!p.bot);G.players.forEach(p=>Object.assign(p,{alive:1,chips:0,last:0}));G.ri=-1;G.phase="lobby";G.autoAt=Date.now()+20000;push()}const ac=document.getElementById("autoc");if(ac&&G&&G.autoAt)ac.textContent=Math.max(0,Math.ceil((G.autoAt-now())/1e3))},500);
 setInterval(()=>{if(NET.host&&!NET.solo&&G)send({k:"st",G,now:Date.now()});if(!NET.host&&!NET.solo&&NET.ch&&(!G||!G.players.some(p=>p.id===ME.id)))send({k:"hello",id:ME.id,nick:ME.nick})},2000);
 
 /* ---------------- 컴퓨터 ---------------- */
@@ -360,7 +364,7 @@ function lobbyHTML(){
   const seats=[];for(let i=0;i<6;i++){const p=G.players[i];seats.push(p?`<div class="ls"><div class="av" style="background:${p.col}">${esc(trS(p.nick).slice(0,1))}</div><span class="nm">${esc(p.nick)}</span><small>${p.id===G.host?"방장":p.bot?"컴퓨터":"참가"}</small></div>`:`<div class="ls empty">빈자리</div>`)}
   const isHost=NET.host;
   return`${NET.solo?"":`<p class="note" style="margin-bottom:0">방 코드</p><div class="code">${esc(G.code)}</div><div class="row"><button class="btn" data-a="share">🔗 초대 링크 보내기</button></div>`}
-  <div class="lobbyseats">${seats.join("")}</div>
+  ${G.pub?`<p class="note" style="color:var(--ink)">🌏 전 세계 공개 방 · <b id="autoc">${Math.max(0,Math.ceil((G.autoAt-now())/1e3))}</b>초 뒤 시작<br><small>사람이 더 오면 같이 하고, 빈자리는 컴퓨터가 채워요</small></p>`:""}<div class="lobbyseats">${seats.join("")}</div>
   ${isHost?`<div class="row"><button class="btn" data-a="bots" ${G.players.length>=6?"disabled":""}>컴퓨터로 채우기</button><button class="btn pri" data-a="start" ${G.players.length<2&&!NET.solo?"":""}>시작하기</button></div><p class="note">2명 미만이면 컴퓨터가 함께해요 · 5라운드 약 10분 · 2·4라운드 뒤 꼴찌 탈락</p>`:`<p class="note">방장이 시작하기를 기다리는 중…</p>`}`;
 }
 function phaseHTML(){
@@ -452,25 +456,31 @@ function leave(){if(!NET.solo&&NET.ch){send({k:"bye",id:ME.id});try{NET.sb.remov
 window.addEventListener("pagehide",leave);
 
 /* ---------------- 첫 화면 ---------------- */
+async function createRoom(pub){const code=Array.from({length:4},()=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[rnd(32)]).join("");NET.code=code;NET.host=true;try{await joinChannel(code)}catch(e){toast("연결하지 못했어요. 잠시 뒤 다시 해 주세요");return false}G=newG();G.code=code;if(pub){G.pub=1;G.autoAt=Date.now()+30000}hostJoin(ME.id,ME.nick);history.replaceState(null,"","/brain/?r="+code);return true}
+async function quick(){toast("전 세계에서 상대를 찾는 중…");const r=await worldPick();if(r){NET.code=r.room;NET.host=false;try{await joinChannel(r.room)}catch(e){return createRoom(1)}send({k:"hello",id:ME.id,nick:ME.nick});setTimeout(()=>{if(!G){try{NET.sb.removeChannel(NET.ch)}catch(e){}NET.ch=null;createRoom(1)}},5000)}else await createRoom(1)}
 function renderHome(){
   const r=new URLSearchParams(location.search).get("r")||"";
   app.innerHTML=`<div class="top"><a href="/">‹ 오락실</a></div>
-  <div class="hero"><h1>두뇌 서바이벌</h1><p>최대 6명 · 5라운드 · 라운드마다 꼴찌는 탈락</p></div>
-  <div class="games">${ROUNDS.slice(0,4).map(R=>`<div class="gm"><i>${R.ic}</i><b>${esc(R.n)}</b><small>${esc(R.rule)}</small></div>`).join("")}</div>
+  <div class="hero"><div class="kick">6명 중 마지막 1명</div><h1>두뇌 서바이벌</h1><p>계산 · 눈치 · 배신. 10분 안에 끝나는 두뇌 싸움</p></div>
+  <div class="path">${[["🧮","셈 탑"],["🪙","눈치 경매"],["x"],["🎭","다수결 함정"],["🔐","금고 거래"],["x"],["🏆","결승"]].map(a=>a[0]==="x"?`<span class="px">탈락</span>`:`<span class="pp"><i>${a[0]}</i>${a[1]}</span>`).join("")}</div>
+  <div class="won" id="wonline"><i></i><span>접속자 확인 중…</span></div>
   <div class="field"><label for="nk">내 이름 (2~8자)</label><input class="in" id="nk" maxlength="8" value="${esc(ME.nick)}" placeholder="닉네임"></div>
-  <button class="btn pri" id="mk">방 만들기 (친구 초대)</button>
+  <button class="btn pri big2" id="qm">🌏 전 세계 빠른 대결</button>
+  <div class="games">${[["🧮","셈 탑","숫자 6장으로 목표 수 만들기"],["🪙","눈치 경매","같은 값을 걸면 둘 다 꽝"],["🎭","다수결 함정","가장 적게 고른 쪽이 승리"],["🔐","금고 거래","나눌까, 독차지할까"]].map(g=>`<div class="gm"><i>${g[0]}</i><b>${g[1]}</b><small>${g[2]}</small></div>`).join("")}</div>
+  
+  <button class="btn" id="mk">👥 친구랑 방 만들기</button>
   <div class="row" style="margin-top:10px"><input class="in" id="jc" maxlength="4" placeholder="방 코드 4자리" value="${esc(r.toUpperCase())}" autocapitalize="characters" style="text-transform:uppercase"><button class="btn" id="jn" style="max-width:120px">들어가기</button></div>
   <button class="btn gold" id="solo" style="margin-top:10px">혼자 하기 · 컴퓨터 5명과</button>
   <p class="note">방 채팅은 이 방 사람만 봐요 · 대화는 저장되지 않아요</p>
   <p class="foot"><a href="/">틈새 오락실</a> · 설치 없이 바로</p>`;
   const nk=$("#nk"),getNick=()=>{const n=cleanNick(nk.value);if(n.length<2){toast("이름을 2자 이상 적어 주세요");nk.focus();return null}ME.nick=n;lsSet("hanpan.me.nick",n);return n};
-  $("#mk").onclick=async()=>{if(!getNick())return;const code=Array.from({length:4},()=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[rnd(32)]).join("");NET.code=code;NET.host=true;$("#mk").disabled=true;try{await joinChannel(code)}catch(e){toast("연결하지 못했어요. 잠시 뒤 다시 해 주세요");$("#mk").disabled=false;return}G=newG();G.code=code;hostJoin(ME.id,ME.nick);history.replaceState(null,"","/brain/?r="+code)};
+  $("#mk").onclick=async()=>{if(!getNick())return;$("#mk").disabled=true;if(!await createRoom(0))$("#mk").disabled=false};$("#qm").onclick=async()=>{if(!getNick())return;$("#qm").disabled=true;await quick()};worldUI();
   $("#jn").onclick=async()=>{if(!getNick())return;const code=($("#jc").value||"").toUpperCase().replace(/[^A-Z0-9]/g,"");if(code.length!==4)return toast("방 코드 4자리를 넣어 주세요");NET.code=code;NET.host=false;$("#jn").disabled=true;try{await joinChannel(code)}catch(e){toast("연결하지 못했어요");$("#jn").disabled=false;return}send({k:"hello",id:ME.id,nick:ME.nick});toast("방을 찾는 중…");setTimeout(()=>{if(!G){toast("방을 찾지 못했어요. 코드를 확인해 주세요");$("#jn").disabled=false}},6000)};
   $("#solo").onclick=()=>{if(!getNick())return;NET.solo=true;NET.host=true;G=newG();G.players.push({id:ME.id,nick:ME.nick,bot:0,alive:1,chips:0,last:0,col:COLS[0]});addBots(5);startGame()};
 }
 render();
-const TRX=[[/(\d+)명 중 (\d+)위!/g,"#$2 of $1!"],[/(\d+)명 중 (\d+)위/g,"#$2 of $1"],[/내 순위 (\d+)위/g,"My rank #$1"],[/(\d+)\/(\d+) 라운드/g,"Round $1/$2"],[/(\d+)번 상품 · (\d+)칩/g,"Lot $1 · $2 chips"],[/(\d+)번 상품 (\d+)칩/g,"Lot $1 · $2"],[/(\d+)번 상품/g,"Lot $1"],[/(\d+)차 금고/g,"Vault round $1"],[/(\d+)차 ·/g,"Round $1 ·"],[/질문 (\d+) \/ 3/g,"Question $1 / 3"],[/(\d+)초/g,"$1s"],[/(\d+)칩/g,"$1 chips"],[/(\d+)개 걸었어요/g,"Bet $1"],[/(\d+)명/g,"$1"]];
-const EN={"공유하기":"Share","친구 부르기":"Invite friends","결과 자랑하기":"Share my result","카카오톡":"KakaoTalk","링크 복사":"Copy link","문자":"SMS","다른 앱":"Other apps","같이 하기":"Play together","나도 도전하기":"Challenge me","복사했어요! 카카오톡 대화방에 붙여넣기 하면 돼요":"Copied! Paste it into a chat","방장이 나가서 내가 이어받았어요":"The host left — you are the host now","방장이 나갔어요 · 다른 사람이 이어받는 중…":"The host left · someone is taking over…","두뇌 서바이벌 — 틈새 오락실":"Brain Survival — BREAK Pocket","두뇌 서바이벌":"Brain Survival","틈새 오락실":"BREAK Pocket","‹ 오락실":"‹ Arcade","최대 6명 · 5라운드 · 라운드마다 꼴찌는 탈락":"Up to 6 · 5 rounds · last place is eliminated",
+const TRX=[[/지금 (\d+)명 접속 중/g,"$1 online now"],[/ · 열린 방 (\d+)개/g," · $1 open rooms"],[/(\d+)명 중 (\d+)위!/g,"#$2 of $1!"],[/(\d+)명 중 (\d+)위/g,"#$2 of $1"],[/내 순위 (\d+)위/g,"My rank #$1"],[/(\d+)\/(\d+) 라운드/g,"Round $1/$2"],[/(\d+)번 상품 · (\d+)칩/g,"Lot $1 · $2 chips"],[/(\d+)번 상품 (\d+)칩/g,"Lot $1 · $2"],[/(\d+)번 상품/g,"Lot $1"],[/(\d+)차 금고/g,"Vault round $1"],[/(\d+)차 ·/g,"Round $1 ·"],[/질문 (\d+) \/ 3/g,"Question $1 / 3"],[/(\d+)초/g,"$1s"],[/(\d+)칩/g,"$1 chips"],[/(\d+)개 걸었어요/g,"Bet $1"],[/(\d+)명/g,"$1"]];
+const EN={"6명 중 마지막 1명":"Last one of six","계산 · 눈치 · 배신. 10분 안에 끝나는 두뇌 싸움":"Math, bluffing, betrayal. A 10-minute battle of wits","결승":"Final","탈락":"OUT","접속자 확인 중…":"Checking who's online…","🌏 전 세계 빠른 대결":"🌏 Quick match (worldwide)","👥 친구랑 방 만들기":"👥 Room with friends","숫자 6장으로 목표 수 만들기":"Hit the target with 6 numbers","같은 값을 걸면 둘 다 꽝":"Same bid? Both lose","가장 적게 고른 쪽이 승리":"The least-picked option wins","나눌까, 독차지할까":"Split or steal?","전 세계에서 상대를 찾는 중…":"Finding players worldwide…","🌏 전 세계 공개 방 · ":"🌏 Public room · starts in ","초 뒤 시작":"s","사람이 더 오면 같이 하고, 빈자리는 컴퓨터가 채워요":"More people can join; bots fill empty seats","공유하기":"Share","친구 부르기":"Invite friends","결과 자랑하기":"Share my result","카카오톡":"KakaoTalk","링크 복사":"Copy link","문자":"SMS","다른 앱":"Other apps","같이 하기":"Play together","나도 도전하기":"Challenge me","복사했어요! 카카오톡 대화방에 붙여넣기 하면 돼요":"Copied! Paste it into a chat","방장이 나가서 내가 이어받았어요":"The host left — you are the host now","방장이 나갔어요 · 다른 사람이 이어받는 중…":"The host left · someone is taking over…","두뇌 서바이벌 — 틈새 오락실":"Brain Survival — BREAK Pocket","두뇌 서바이벌":"Brain Survival","틈새 오락실":"BREAK Pocket","‹ 오락실":"‹ Arcade","최대 6명 · 5라운드 · 라운드마다 꼴찌는 탈락":"Up to 6 · 5 rounds · last place is eliminated",
 "셈 탑 결승":"Math Tower Final","셈 탑":"Math Tower","눈치 경매":"Secret Auction","다수결 함정":"Minority Trap","금고 거래":"Vault Deal",
 "같은 숫자 카드 6장으로 목표 수를 만드는 식을 세우세요. 카드마다 한 번씩만 쓸 수 있어요.":"Use the 6 shared number cards to build an expression that hits the target. Each card can be used once.",
 "딱 맞히면 6칩 · 가까울수록 칩 · 가장 빨리 맞힌 사람 +2칩":"Exact = 6 chips · closer earns more · fastest exact +2",
@@ -499,6 +509,18 @@ const EN={"공유하기":"Share","친구 부르기":"Invite friends","결과 자
 "똑똑이":"Smarty","셈돌이":"Counter","눈치왕":"Sneaky","여우":"Foxy","곰돌이":"Teddy","부엉이":"Owly","다람쥐":"Squirrel","치타":"Cheetah","손님":"Guest","(컴)":"(bot)",
 "짜장면":"Black-bean noodles","짬뽕":"Spicy noodle soup","볶음밥":"Fried rice","바다":"Sea","산":"Mountains","도시":"City","아침형":"Morning person","저녁형":"Night owl","그때그때":"Depends","강아지":"Dog","고양이":"Cat","앵무새":"Parrot","여름":"Summer","겨울":"Winter","봄·가을":"Spring/Fall","떡볶이":"Tteokbokki","순대":"Sundae","튀김":"Fritters","버스":"Bus","지하철":"Subway","걷기":"Walking","영화관":"Cinema","집에서 넷플릭스":"Streaming at home","공원 산책":"Walk in the park","커피":"Coffee","녹차":"Green tea","탄산음료":"Soda","축구":"Soccer","야구":"Baseball","배구":"Volleyball","엘리베이터":"Elevator","계단":"Stairs","에스컬레이터":"Escalator","치킨":"Fried chicken","피자":"Pizza","햄버거":"Burger","라면에 계란":"Ramen + egg","라면에 치즈":"Ramen + cheese","그냥 라면":"Plain ramen","비 오는 날":"Rainy day","눈 오는 날":"Snowy day","맑은 날":"Sunny day","산책":"A walk","낮잠":"A nap","수다":"A chat","전화":"Call","문자":"Text","직접 만나기":"Meet in person","캠핑":"Camping","호텔":"Hotel","집":"Home","김치찌개":"Kimchi stew","된장찌개":"Soybean stew","부대찌개":"Army stew","드라마":"Dramas","예능":"Variety shows","뉴스":"News","초콜릿":"Chocolate","사탕":"Candy","젤리":"Gummies","노래방":"Karaoke","볼링":"Bowling","당구":"Billiards","바다 수영":"Ocean swim","계곡":"Valley stream","수영장":"Pool","단팥빵":"Red-bean bun","소보로":"Streusel bun","크림빵":"Cream bun","새벽":"Dawn","한낮":"Noon","한밤":"Midnight","사과":"Apple","배":"Pear","귤":"Tangerine","자동차":"Car","기차":"Train","비행기":"Plane","팥빙수":"Bingsu","아이스크림":"Ice cream","슬러시":"Slushie","동물원":"Zoo","수족관":"Aquarium","식물원":"Botanic garden","택시":"Taxi","자전거":"Bike","킥보드":"Scooter","봄나물":"Spring greens","가을 단풍":"Autumn leaves","겨울 눈꽃":"Winter snow",
 "ROUND":"ROUND","라운드":"Round"};
+const WPFX="brain";
+/* ---------------- 전 세계 대기실 (접속자 수 · 빠른 대결) ---------------- */
+var WORLD={ch:null,list:[],online:0,ready:false,me:{}};
+async function worldOn(){if(WORLD.ch||WORLD.busy)return;WORLD.busy=1;try{const sb=await sbClient();const ch=sb.channel(WPFX+"-world",{config:{presence:{key:ME.id}}});
+  ch.on("presence",{event:"sync"},()=>{const all=Object.values(ch.presenceState()).map(a=>a[a.length-1]||{});WORLD.online=all.length;WORLD.list=all.filter(x=>x.room&&x.open);WORLD.ready=true;worldUI()});
+  await new Promise((res,rej)=>{const t=setTimeout(()=>rej(new Error("t")),9000);ch.subscribe(s=>{if(s==="SUBSCRIBED"){clearTimeout(t);res()}else if(s==="CHANNEL_ERROR"||s==="TIMED_OUT"){clearTimeout(t);rej(new Error(s))}})});
+  WORLD.ch=ch;worldTrack()}catch(e){}WORLD.busy=0}
+function worldTrack(x){if(!WORLD)return;if(x)WORLD.me=Object.assign({},WORLD.me,x);WORLD.me.lang=LANG;if(!WORLD.ch)return;try{WORLD.ch.track(Object.assign({t:Date.now()},WORLD.me)).catch(()=>{})}catch(e){}}
+function worldUI(){const e=document.getElementById("wonline");if(!e||!WORLD)return;const n=Math.max(1,WORLD.online),r=WORLD.list.length;e.innerHTML=`<i></i><span>${esc(trS(`지금 ${n}명 접속 중`+(r?` · 열린 방 ${r}개`:"")))}</span>`}
+async function worldPick(){await worldOn();for(let i=0;i<10&&!WORLD.ready;i++)await new Promise(r=>setTimeout(r,250));const now=Date.now();
+  return WORLD.list.filter(r=>r.open&&r.n<6&&r.room!==NET.code&&now-r.t<180000).sort((a,b)=>((b.lang===LANG)-(a.lang===LANG))||(b.n-a.n))[0]||null}
+setTimeout(worldOn,600);
 /* ---------------- 다른 언어 (화면 글자를 바꿔 보여 줘요) ---------------- */
 const LANG=(()=>{try{const v=JSON.parse(localStorage.getItem("hanpan.lang")||"null");if(v)return v==="ko"?"ko":"en"}catch(e){}return /^ko/i.test(navigator.language||"ko")?"ko":"en"})();
 const TRK=Object.keys(EN).sort((a,b)=>b.length-a.length);
