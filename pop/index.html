@@ -118,18 +118,19 @@ async function joinChannel(code){const sb=await sbClient();const ch=sb.channel("
 function send(p){if(NET.solo||!NET.ch)return;try{NET.ch.send({type:"broadcast",event:"m",payload:p})}catch(e){}}
 function onMsg(p){
   if(!p||typeof p!=="object")return;
-  if(!NET.host){if(p.k==="lob"){L=p.L;NET.last=Date.now();renderLobby()}else if(p.k==="s"){NET.last=Date.now();applySnap(p)}else if(p.k==="start"){L=p.L;startLocal(p.seed,p.grid)}return}
+  if(!NET.host){if(p.k==="bye"&&L&&p.id===L.host){toast("방장이 나갔어요 · 다른 사람이 이어받는 중…");popTakeover(true);return}if(p.k==="lob"){L=p.L;NET.last=Date.now();renderLobby()}else if(p.k==="s"){NET.last=Date.now();applySnap(p)}else if(p.k==="start"){L=p.L;startLocal(p.seed,p.grid)}return}
   if(p.k==="hello")hostJoin(p.id,p.nick);
   else if(p.k==="in"&&S){const pl=S.pl.find(x=>x.id===p.id);if(pl){pl.ix=Math.max(-1,Math.min(1,p.dx|0));pl.iy=Math.max(-1,Math.min(1,p.dy|0));if(p.b)pl.wantB=1}}
   else if(p.k==="pick"){const pl=L.players.find(x=>x.id===p.id),c=p.ch|0;if(pl&&c>=0&&c<NCH&&!L.players.some(x=>x.ch===c&&x!==pl)){pl.ch=c;pushLobby()}}
   else if(p.k==="bye"){const i=L.players.findIndex(x=>x.id===p.id);if(i>=0){if(!S)L.players.splice(i,1);else{L.players[i].bot=1;const pl=S.pl.find(x=>x.id===p.id);if(pl)pl.bot=1}}pushLobby()}
 }
+function popTakeover(force){if(NET.host||NET.solo||!L)return;const sil=Date.now()-NET.last;if(!force&&sil<5000)return;const humans=L.players.filter(p=>!p.bot&&p.id!==L.host),k=force?0:Math.floor((sil-5000)/4000),c=humans[Math.min(k,humans.length-1)];if(!c||c.id!==ME.id)return;const old=L.host;NET.host=true;L.host=ME.id;if(S){const op=S.pl.find(p=>p.id===old);if(op)op.bot=1;const lp=L.players.find(p=>p.id===old);if(lp)lp.bot=1;S.pl.forEach(p=>{p.ix=0;p.iy=0;p.inv=p.inv||0;p.spd=p.spd||3.6});if(S.end){S.shown=0}}else{L.players=L.players.filter(p=>p.id!==old);pushLobby()}toast("방장이 나가서 내가 이어받았어요")}
 /* ---------------- 대기실 ---------------- */
 let L=null; // {code,host,players:[{id,nick,bot,ch}]}
 function pushLobby(){renderLobby();send({k:"lob",L})}
 function hostJoin(id,nick){if(S){return}if(L.players.some(p=>p.id===id))return pushLobby();if(L.players.length>=6)return;const used=new Set(L.players.map(p=>p.ch));let ch=id===ME.id?(lsGet("pop.ch",0)|0):0;while(used.has(ch))ch=(ch+1)%NCH;L.players.push({id,nick:cleanNick(nick)||"손님",bot:0,ch});pushLobby();sfx(660,.1)}
 function addBots(){const used=new Set(L.players.map(p=>p.ch));for(let i=0;L.players.length<6&&i<6;i++){let ch=rnd(NCH);while(used.has(ch))ch=(ch+1)%NCH;used.add(ch);L.players.push({id:"bot"+Math.random().toString(36).slice(2,7),nick:BOTN[ch],bot:1,ch})}}
-setInterval(()=>{if(NET.host&&!NET.solo&&L&&!S)send({k:"lob",L});if(!NET.host&&!NET.solo&&NET.ch&&!S&&(!L||!L.players.some(p=>p.id===ME.id)))send({k:"hello",id:ME.id,nick:ME.nick});if(!NET.host&&!NET.solo&&NET.last&&Date.now()-NET.last>10000){NET.last=0;toast("방장 연결이 끊겼어요")}},2000);
+setInterval(()=>{if(NET.host&&!NET.solo&&L&&!S)send({k:"lob",L});if(!NET.host&&!NET.solo&&NET.ch&&!S&&(!L||!L.players.some(p=>p.id===ME.id)))send({k:"hello",id:ME.id,nick:ME.nick});if(!NET.host&&!NET.solo&&NET.last)popTakeover(false)},2000);
 
 /* ---------------- 게임 상태 ---------------- */
 let S=null; // 시뮬레이션(방장) 또는 받은 상태(손님)
@@ -290,10 +291,10 @@ function loop(ts){requestAnimationFrame(loop);if(!S)return;const dt=Math.min(.05
     if(S.end&&!S.shown)showEnd()}
   draw();hud()}
 requestAnimationFrame(loop);
-function snap(){return{k:"s",g:S.grid.join(""),it:S.items,b:S.bombs.map(b=>[b.x,b.y,+b.t.toFixed(2)]),f:S.flames.map(f=>[f.x,f.y,+f.t.toFixed(2),f.c]),p:S.pl.map(p=>[p.id,+p.x.toFixed(3),+p.y.toFixed(3),p.dir,p.alive,p.walk>0?1:0,p.rng,p.max,p.sh?1:0,p.inv>0?1:0]),l:Math.round(S.left),e:S.end,t:+S.t.toFixed(2)}}
-function applySnap(m){if(!S)return;const prevB=S.bombs.length;S.grid=m.g.split("").map(Number);S.items=m.it||{};S.bombs=m.b.map(a=>({x:a[0],y:a[1],t:a[2]}));
+function snap(){return{k:"s",g:S.grid.join(""),it:S.items,b:S.bombs.map(b=>[b.x,b.y,+b.t.toFixed(2),b.r,b.o]),f:S.flames.map(f=>[f.x,f.y,+f.t.toFixed(2),f.c]),p:S.pl.map(p=>[p.id,+p.x.toFixed(3),+p.y.toFixed(3),p.dir,p.alive,p.walk>0?1:0,p.rng,p.max,p.sh?1:0,p.inv>0?1:0,+p.spd.toFixed(2),p.kick?1:0]),l:Math.round(S.left),e:S.end,t:+S.t.toFixed(2)}}
+function applySnap(m){if(!S)return;const prevB=S.bombs.length;S.grid=m.g.split("").map(Number);S.items=m.it||{};S.bombs=m.b.map(a=>({x:a[0],y:a[1],t:a[2],r:a[3]||2,o:a[4]}));
   const had=new Set(S.flames.map(f=>f.x+","+f.y)),nf=m.f.filter(a=>!had.has(a[0]+","+a[1])&&a[2]>FLAME*.6);S.flames=m.f.map(a=>({x:a[0],y:a[1],t:a[2],c:a[3]}));if(nf.length){splash(nf.map(a=>[a[0],a[1],a[3]===0]));sfx(240,.32,"sine",.08,-170);buzz(15)}
-  for(const a of m.p){const p=S.pl.find(x=>x.id===a[0]);if(!p)continue;if(p.alive&&!a[4]){S.fx.push({x:p.x,y:p.y,t:0,k:"out",id:p.id});splash([[Math.round(p.x),Math.round(p.y),1]])}p.x=a[1];p.y=a[2];p.dir=a[3];p.alive=a[4];p.walk=a[5]?(p.walk||0)+.016:0;p.rng=a[6];p.max=a[7];p.sh=a[8];p.inv=a[9]?1:0}
+  for(const a of m.p){const p=S.pl.find(x=>x.id===a[0]);if(!p)continue;if(p.alive&&!a[4]){S.fx.push({x:p.x,y:p.y,t:0,k:"out",id:p.id});splash([[Math.round(p.x),Math.round(p.y),1]])}p.x=a[1];p.y=a[2];p.dir=a[3];p.alive=a[4];p.walk=a[5]?(p.walk||0)+.016:0;p.rng=a[6];p.max=a[7];p.sh=a[8];p.inv=a[9]?.5:0;p.spd=a[10]||3.6;p.kick=a[11]}
   S.left=m.l;S.end=m.e;S.t=m.t}
 function hud(){const h=$("#hpl");if(!h||!S)return;const cd=$("#cd"),cv2=S.t<0?Math.ceil(-S.t):S.t<.7?"시작!":"";if(cd.textContent!==String(cv2)){cd.textContent=cv2;cv2&&sfx(cv2==="시작!"?880:520,.12)}const W2=(L&&L.wins)||{},html=S.pl.map(p=>`<span class="${p.alive?"":"dead"}"><i style="background:${CH[p.ch].c}"></i>${esc(p.nick)}${W2[p.id]?`<b class="score">${"★".repeat(W2[p.id])}</b>`:""}</span>`).join("");if(h._h!==html){h._h=html;h.innerHTML=html}
   const l=Math.ceil(S.left);$("#htm").textContent=l>0?Math.floor(l/60)+":"+String(l%60).padStart(2,"0"):"조여요!";const me=S.pl.find(p=>p.id===ME.id);if(me&&me.alive)$("#htm").title=`사거리 ${me.rng} · 폭죽 ${me.max}`}
@@ -346,7 +347,7 @@ function renderHome(){
 }
 renderHome();
 const TRX=[];
-const EN={"첨벙 대작전 — 틈새 오락실":"Splash Battle — BREAK Pocket","첨벙 대작전":"Splash Battle","틈새 오락실":"BREAK Pocket","‹ 오락실":"‹ Arcade","‹ 처음":"‹ Back",
+const EN={"방장이 나가서 내가 이어받았어요":"The host left — you are the host now","방장이 나갔어요 · 다른 사람이 이어받는 중…":"The host left · someone is taking over…","첨벙 대작전 — 틈새 오락실":"Splash Battle — BREAK Pocket","첨벙 대작전":"Splash Battle","틈새 오락실":"BREAK Pocket","‹ 오락실":"‹ Arcade","‹ 처음":"‹ Back",
 "물풍선으로 친구를 적셔라 · 최대 6명":"Soak your friends with water balloons · up to 6","물풍선 놓기":"Drop a balloon","잠시 뒤 십자로 첨벙!":"Splashes in a cross after a moment!","상자 깨기":"Break crates","아이템이 숨어 있어요":"Items are hidden inside","끝까지 버티기":"Stay dry","젖으면 탈락":"Get soaked and you're out",
 "내 이름 (2~8자)":"Your name (2–8 chars)","닉네임":"Nickname","내 캐릭터 고르기 (12종)":"Pick your character (12)","내 캐릭터":"Your character","방 만들기 (친구 초대)":"Create room (invite friends)","방 코드 4자리":"4-letter room code","들어가기":"Join","혼자 하기 · 컴퓨터 3명과":"Play solo · with 3 bots",
 "3판 2선승 · 💧 물줄기 길게 · 🎈 풍선 하나 더 · 👟 빨라지기 · 🛡 방패 · 🦶 풍선 차기 · 3분이 지나면 바깥부터 벽이 조여 와요":"Best of 3 · 💧 longer splash · 🎈 one more balloon · 👟 faster · 🛡 shield · 🦶 kick balloons · after 3 min the walls close in",

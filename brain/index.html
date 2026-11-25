@@ -206,11 +206,13 @@ function onMsg(p){
   if(!p||typeof p!=="object")return;
   if(p.k==="st"&&!NET.host){NET.lastSt=Date.now();NET.off=Date.now()-p.now;G=p.G;render();return}
   if(p.k==="chat"){addChat(p.c);return}
+  if(p.k==="bye"&&!NET.host&&G&&p.id===G.host){toast("방장이 나갔어요 · 다른 사람이 이어받는 중…");tryTakeover(true);return}
   if(!NET.host)return;
   if(p.k==="hello"){hostJoin(p.id,p.nick);return}
   if(p.k==="act"&&p.a){hostAct(p.a);return}
   if(p.k==="bye"){const pl=G.players.find(x=>x.id===p.id);if(pl){if(G.phase==="lobby")G.players=G.players.filter(x=>x.id!==p.id);else{pl.bot=1;pl.nick=pl.nick+"(컴)"}}push()}
 }
+function tryTakeover(force){if(NET.host||NET.solo||!G||G.phase==="end")return;const sil=Date.now()-NET.lastSt;if(!force&&sil<6000)return;const humans=G.players.filter(p=>!p.bot&&p.id!==G.host),k=force?0:Math.floor((sil-6000)/4000),cand=humans[Math.min(k,humans.length-1)];if(!cand||cand.id!==ME.id)return;const old=G.players.find(p=>p.id===G.host);if(G.phase==="lobby")G.players=G.players.filter(p=>p!==old);else if(old){old.bot=1;old.skill=.6}NET.host=true;G.host=ME.id;if(G.dl)G.dl+=NET.off;NET.off=0;toast("방장이 나가서 내가 이어받았어요");push();if(G.phase==="play")scheduleBots()}
 const now=()=>NET.host||NET.solo?Date.now():Date.now()-NET.off;
 
 /* ---------------- 상태 (방장이 진행) ---------------- */
@@ -308,7 +310,7 @@ function tick(){
     else if(G.phase==="reveal")afterReveal();
     else if(G.phase==="elim")NET.solo&&G.d.out===ME.id?endGame():nextRound();
   }
-  if(!NET.host&&!NET.solo&&G&&NET.lastSt&&Date.now()-NET.lastSt>12000&&G.phase!=="end"){NET.lastSt=0;toast("방장 연결이 끊겼어요");}
+  if(!NET.host&&!NET.solo&&G&&NET.lastSt)tryTakeover(false);
   updTimer();
 }
 setInterval(tick,250);
@@ -468,7 +470,7 @@ function renderHome(){
 }
 render();
 const TRX=[[/(\d+)명 중 (\d+)위!/g,"#$2 of $1!"],[/(\d+)명 중 (\d+)위/g,"#$2 of $1"],[/내 순위 (\d+)위/g,"My rank #$1"],[/(\d+)\/(\d+) 라운드/g,"Round $1/$2"],[/(\d+)번 상품 · (\d+)칩/g,"Lot $1 · $2 chips"],[/(\d+)번 상품 (\d+)칩/g,"Lot $1 · $2"],[/(\d+)번 상품/g,"Lot $1"],[/(\d+)차 금고/g,"Vault round $1"],[/(\d+)차 ·/g,"Round $1 ·"],[/질문 (\d+) \/ 3/g,"Question $1 / 3"],[/(\d+)초/g,"$1s"],[/(\d+)칩/g,"$1 chips"],[/(\d+)개 걸었어요/g,"Bet $1"],[/(\d+)명/g,"$1"]];
-const EN={"두뇌 서바이벌 — 틈새 오락실":"Brain Survival — BREAK Pocket","두뇌 서바이벌":"Brain Survival","틈새 오락실":"BREAK Pocket","‹ 오락실":"‹ Arcade","최대 6명 · 5라운드 · 라운드마다 꼴찌는 탈락":"Up to 6 · 5 rounds · last place is eliminated",
+const EN={"방장이 나가서 내가 이어받았어요":"The host left — you are the host now","방장이 나갔어요 · 다른 사람이 이어받는 중…":"The host left · someone is taking over…","두뇌 서바이벌 — 틈새 오락실":"Brain Survival — BREAK Pocket","두뇌 서바이벌":"Brain Survival","틈새 오락실":"BREAK Pocket","‹ 오락실":"‹ Arcade","최대 6명 · 5라운드 · 라운드마다 꼴찌는 탈락":"Up to 6 · 5 rounds · last place is eliminated",
 "셈 탑 결승":"Math Tower Final","셈 탑":"Math Tower","눈치 경매":"Secret Auction","다수결 함정":"Minority Trap","금고 거래":"Vault Deal",
 "같은 숫자 카드 6장으로 목표 수를 만드는 식을 세우세요. 카드마다 한 번씩만 쓸 수 있어요.":"Use the 6 shared number cards to build an expression that hits the target. Each card can be used once.",
 "딱 맞히면 6칩 · 가까울수록 칩 · 가장 빨리 맞힌 사람 +2칩":"Exact = 6 chips · closer earns more · fastest exact +2",
