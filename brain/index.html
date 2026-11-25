@@ -335,7 +335,7 @@ function toTokens(s,nums){ // "(3+(5×2))" → 토큰(카드 번호 맞추기)
 
 /* ---------------- 화면 ---------------- */
 let UI={tok:[],bid:null,pick:null,vc:null,chat:[],screen:"home"};
-function seatsHTML(){return`<div class="seats">${G.players.map(p=>{const d=G.d||{},done=G.phase==="play"&&p.alive&&(d.sub&&d.sub[p.id]!=null);return`<div class="seat ${p.id===ME.id?"me":""} ${p.alive?"":"out"}"><div class="av" style="background:${p.col}">${esc(p.nick.slice(0,1))}${done?'<span class="ok">✓</span>':""}</div><span class="nm">${esc(p.nick)}</span><span class="ch">${p.chips}칩</span></div>`}).join("")}</div>`}
+function seatsHTML(){return`<div class="seats">${G.players.map(p=>{const d=G.d||{},done=G.phase==="play"&&p.alive&&(d.sub&&d.sub[p.id]!=null);return`<div class="seat ${p.id===ME.id?"me":""} ${p.alive?"":"out"}"><div class="av" style="background:${p.col}">${esc(trS(p.nick).slice(0,1))}${done?'<span class="ok">✓</span>':""}</div><span class="nm">${esc(p.nick)}</span><span class="ch">${p.chips}칩</span></div>`}).join("")}</div>`}
 function topHTML(){const R=ROUNDS[G.ri]||{};return`<div class="top"><a href="/" aria-label="틈새 오락실로">‹ 오락실</a><span class="ttl">두뇌 서바이벌</span><span class="rd">${G.ri>=0&&G.phase!=="end"?`${G.ri+1}/${ROUNDS.length} 라운드<br>${esc(R.n)}`:""}</span></div>`}
 function timerHTML(){return`<div class="timer"><i id="tbar"></i></div>`}
 function updTimer(){const e=$("#tbar");if(!e||!G||!G.dl)return;const tot=(G.phase==="intro"?T.intro:G.phase==="play"?(G.d.k==="math"?T.math:G.d.k==="auc"?T.auc:G.d.k==="min"?T.min:T.vault):G.phase==="elim"?T.elim:7)*1e3;const left=Math.max(0,G.dl-now());e.style.transform=`scaleX(${Math.min(1,left/tot)})`;const s=$("#tsec");if(s)s.textContent=Math.ceil(left/1e3)+"초";const sec=Math.ceil(left/1e3);if(G.phase==="play"&&sec<=5&&sec>0&&updTimer.last!==sec){updTimer.last=sec;sfx(sec<=2?1200:900,.05,"square",.03)}}
@@ -355,7 +355,7 @@ function render(){
   const lg=$("#clog");if(lg)lg.scrollTop=lg.scrollHeight;
 }
 function lobbyHTML(){
-  const seats=[];for(let i=0;i<6;i++){const p=G.players[i];seats.push(p?`<div class="ls"><div class="av" style="background:${p.col}">${esc(p.nick.slice(0,1))}</div><span class="nm">${esc(p.nick)}</span><small>${p.id===G.host?"방장":p.bot?"컴퓨터":"참가"}</small></div>`:`<div class="ls empty">빈자리</div>`)}
+  const seats=[];for(let i=0;i<6;i++){const p=G.players[i];seats.push(p?`<div class="ls"><div class="av" style="background:${p.col}">${esc(trS(p.nick).slice(0,1))}</div><span class="nm">${esc(p.nick)}</span><small>${p.id===G.host?"방장":p.bot?"컴퓨터":"참가"}</small></div>`:`<div class="ls empty">빈자리</div>`)}
   const isHost=NET.host;
   return`${NET.solo?"":`<p class="note" style="margin-bottom:0">방 코드</p><div class="code">${esc(G.code)}</div><div class="row"><button class="btn" data-a="share">🔗 초대 링크 보내기</button></div>`}
   <div class="lobbyseats">${seats.join("")}</div>
@@ -364,7 +364,7 @@ function lobbyHTML(){
 function phaseHTML(){
   const R=ROUNDS[G.ri]||{},d=G.d||{},me=meP(),out=me&&!me.alive;
   if(G.phase==="intro")return`${timerHTML()}<div class="intro"><div class="no">ROUND ${G.ri+1}</div><h2>${R.ic} ${esc(R.n)}</h2><p>${esc(R.rule)}</p><p class="tip">${esc(R.tip)}</p></div>`;
-  if(G.phase==="elim"){const o=G.players.find(p=>p.id===d.out)||{};return`${timerHTML()}<div class="elim"><p class="sub">칩이 가장 적은 사람이 떠나요</p><div class="av" style="background:${o.col}">${esc((o.nick||"?").slice(0,1))}</div><div class="big">${esc(o.nick)} 탈락</div><p class="sub">${o.id===ME.id?"아쉬워요! 끝까지 지켜보며 응원할 수 있어요":"살아남았어요! 다음 라운드로"}</p></div>`}
+  if(G.phase==="elim"){const o=G.players.find(p=>p.id===d.out)||{};return`${timerHTML()}<div class="elim"><p class="sub">칩이 가장 적은 사람이 떠나요</p><div class="av" style="background:${o.col}">${esc(trS(o.nick||"?").slice(0,1))}</div><div class="big">${esc(o.nick)} 탈락</div><p class="sub">${o.id===ME.id?"아쉬워요! 끝까지 지켜보며 응원할 수 있어요":"살아남았어요! 다음 라운드로"}</p></div>`}
   if(G.phase==="end")return endHTML();
   if(d.k==="math")return mathHTML(R,d,out);
   if(d.k==="auc")return aucHTML(R,d,out);
@@ -376,7 +376,7 @@ function nameOf(id){const p=G.players.find(x=>x.id===id);return p?p.nick:"?"}
 function colOf(id){const p=G.players.find(x=>x.id===id);return p?p.col:"#888"}
 function mathHTML(R,d,out){
   if(G.phase==="reveal"){const rows=(d.res||[]).slice().sort((a,b)=>b.g-a.g||a.dist-b.dist);
-    return`<p class="ph">${R.ic} 결과</p><div class="target"><small>목표</small><b>${d.target}</b></div><div class="res">${rows.map((r,i)=>`<div class="rr ${i===0&&r.g>0?"win":""}"><span class="dot" style="background:${colOf(r.id)}">${esc(nameOf(r.id).slice(0,1))}</span><span class="n">${esc(nameOf(r.id))}${r.fast?" ⚡":""}<br><small style="color:var(--mute);font-weight:400">${r.s?esc(r.s.s)+" = "+fmtV(r.s.v):"제출 안 함"}</small></span><span class="g">+${r.g}</span></div>`).join("")}</div>`}
+    return`<p class="ph">${R.ic} 결과</p><div class="target"><small>목표</small><b>${d.target}</b></div><div class="res">${rows.map((r,i)=>`<div class="rr ${i===0&&r.g>0?"win":""}"><span class="dot" style="background:${colOf(r.id)}">${esc(trS(nameOf(r.id)).slice(0,1))}</span><span class="n">${esc(nameOf(r.id))}${r.fast?" ⚡":""}<br><small style="color:var(--mute);font-weight:400">${r.s?esc(r.s.s)+" = "+fmtV(r.s.v):"제출 안 함"}</small></span><span class="g">+${r.g}</span></div>`).join("")}</div>`}
   const mine=d.sub&&d.sub[ME.id],used=new Set(UI.tok.filter(t=>t.t==="n").map(t=>t.i)),v=evalExpr(UI.tok),str=UI.tok.map(t=>t.t==="n"?t.v:t.t==="o"?t.v:t.t).join(" ");
   return`${timerHTML()}<div class="target"><small>목표 수 · <span id="tsec"></span></small><b>${d.target}</b></div>
   ${out?`<p class="sub">탈락했어요. 다른 사람들이 푸는 걸 지켜봐요</p>`:`
@@ -410,14 +410,14 @@ function vaultHTML(R,d,out){
   if(G.phase==="reveal"||G.phase==="mid")return`<p class="ph">${R.ic} 금고가 열렸어요</p><div class="res">${hist}</div>${G.phase==="mid"?`<p class="note">짝을 바꿔 한 번 더…</p>`:""}`;
   const pair=(d.pairs||[]).find(p=>p.includes(ME.id)),opp=pair&&pair.find(x=>x!==ME.id),my=d.sub&&d.sub[ME.id],sel=UI.vc||my;
   return`${timerHTML()}<p class="ph">${d.r+1}차 금고</p><p class="sub"><span id="tsec"></span> · 채팅으로 약속해 보세요</p>
-  ${out?`<p class="sub">탈락했어요. 지켜보는 중</p>`:d.rest===ME.id?`<p class="sub">이번엔 짝이 없어 쉬어요 · +2칩</p>`:`<div class="vs"><div class="av" style="background:${colOf(ME.id)}">${esc(nameOf(ME.id).slice(0,1))}</div><b>VS</b><div class="av" style="background:${colOf(opp)}">${esc(nameOf(opp).slice(0,1))}</div></div><p class="sub">상대: <b>${esc(nameOf(opp))}</b></p>
+  ${out?`<p class="sub">탈락했어요. 지켜보는 중</p>`:d.rest===ME.id?`<p class="sub">이번엔 짝이 없어 쉬어요 · +2칩</p>`:`<div class="vs"><div class="av" style="background:${colOf(ME.id)}">${esc(trS(nameOf(ME.id)).slice(0,1))}</div><b>VS</b><div class="av" style="background:${colOf(opp)}">${esc(trS(nameOf(opp)).slice(0,1))}</div></div><p class="sub">상대: <b>${esc(nameOf(opp))}</b></p>
   <div class="vault"><button class="vbtn ${sel==="split"?"on":""}" data-v="split">🤝 나누기<small>둘 다 나누면 +3씩</small></button><button class="vbtn ${sel==="steal"?"on":""}" data-v="steal">😈 독차지<small>혼자면 +5 · 둘 다면 0</small></button></div>
   <table class="mtx"><tr><td></td><td>상대 나누기</td><td>상대 독차지</td></tr><tr><td>나 나누기</td><td>+3 / +3</td><td>0 / +5</td></tr><tr><td>나 독차지</td><td>+5 / 0</td><td>0 / 0</td></tr></table>`}
   ${hist?`<div class="res">${hist}</div>`:""}`;
 }
 function endHTML(){
   const r=G.players.slice().sort((a,b)=>(b.alive-a.alive)||(b.chips-a.chips));const w=r[0],mo=meP(),myRank=r.indexOf(mo)+1;
-  return`<p class="ph">🏆 최종 결과</p><div class="elim"><div class="av" style="background:${w.col};animation:none">${esc(w.nick.slice(0,1))}</div><div class="big">${mo&&!mo.alive&&NET.solo?"탈락했어요":esc(w.nick)+" 우승!"}</div>${mo?`<p class="sub">내 순위 ${myRank}위 · ${mo.chips}칩</p>`:""}</div>
+  return`<p class="ph">🏆 최종 결과</p><div class="elim"><div class="av" style="background:${w.col};animation:none">${esc(trS(w.nick).slice(0,1))}</div><div class="big">${mo&&!mo.alive&&NET.solo?"탈락했어요":esc(w.nick)+" 우승!"}</div>${mo?`<p class="sub">내 순위 ${myRank}위 · ${mo.chips}칩</p>`:""}</div>
   <button class="btn" data-a="brag" style="margin:6px 0 10px">📣 결과 자랑하기</button><div class="res">${r.map((p,i)=>`<div class="rr ${i===0?"win":""}"><span class="dot" style="background:${p.col}">${i+1}</span><span class="n">${esc(p.nick)}${p.alive?"":" · 탈락"}</span><span class="g">${p.chips}칩</span></div>`).join("")}</div>
   ${NET.host?`<div class="row" style="margin-top:14px"><button class="btn pri" data-a="again">${NET.solo?"다시 도전":"한 판 더"}</button><button class="btn" data-a="home">나가기</button></div>`:`<div class="row" style="margin-top:14px"><button class="btn" data-a="home">나가기</button></div><p class="note">방장이 한 판 더를 누르면 다시 시작해요</p>`}`;
 }
@@ -436,7 +436,7 @@ function bind(){
   app.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>doA(b.dataset.a));
 }
 function doA(a){
-  if(a==="brag"){const r=G.players.slice().sort((a,b)=>(b.alive-a.alive)||(b.chips-a.chips)),me=meP(),k=r.indexOf(me)+1,t=`두뇌 서바이벌 ${G.players.length}명 중 ${k}위! (${me?me.chips:0}칩) 나랑 붙어 볼래요?`,url=location.origin+"/brain/";if(navigator.share)navigator.share({title:"두뇌 서바이벌",text:t,url}).catch(()=>{});else{navigator.clipboard&&navigator.clipboard.writeText(t+" "+url);toast("복사했어요")}}
+  if(a==="brag"){const r=G.players.slice().sort((a,b)=>(b.alive-a.alive)||(b.chips-a.chips)),me=meP(),k=r.indexOf(me)+1,t=`두뇌 서바이벌 ${G.players.length}명 중 ${k}위! (${me?me.chips:0}칩) 나랑 붙어 볼래요?`,url=location.origin+"/brain/";if(navigator.share)navigator.share({title:trS("두뇌 서바이벌"),text:trS(t),url}).catch(()=>{});else{navigator.clipboard&&navigator.clipboard.writeText(trS(t)+" "+url);toast("복사했어요")}}
   if(a==="clr"){UI.tok=[];render()}
   if(a==="sub"){const s=UI.tok.map(t=>t.t==="n"?t.v:t.t==="o"?t.v:t.t).join("");act({t:"sub",tok:UI.tok,s});toast("제출했어요");sfx(780,.08)}
   if(a==="bid"&&UI.bid!=null){act({t:"bid",v:UI.bid});toast(UI.bid+"개 걸었어요");sfx(700,.06)}
@@ -444,7 +444,7 @@ function doA(a){
   if(a==="start"&&NET.host){startGame()}
   if(a==="again"&&NET.host){G.players.forEach(p=>Object.assign(p,{alive:1,chips:0,last:0}));G.ri=-1;if(NET.solo)startGame();else{G.phase="lobby";push()}}
   if(a==="home"){leave();location.href="/brain/"}
-  if(a==="share"){const url=location.origin+"/brain/?r="+G.code,t="두뇌 서바이벌 같이 해요! 방 코드 "+G.code;if(navigator.share)navigator.share({title:"두뇌 서바이벌",text:t,url}).catch(()=>{});else{navigator.clipboard&&navigator.clipboard.writeText(t+" "+url);toast("링크를 복사했어요")}}
+  if(a==="share"){const url=location.origin+"/brain/?r="+G.code,t="두뇌 서바이벌 같이 해요! 방 코드 "+G.code;if(navigator.share)navigator.share({title:trS("두뇌 서바이벌"),text:trS(t),url}).catch(()=>{});else{navigator.clipboard&&navigator.clipboard.writeText(trS(t)+" "+url);toast("링크를 복사했어요")}}
 }
 function leave(){if(!NET.solo&&NET.ch){send({k:"bye",id:ME.id});try{NET.sb.removeChannel(NET.ch)}catch(e){}}}
 window.addEventListener("pagehide",leave);
@@ -467,6 +467,42 @@ function renderHome(){
   $("#solo").onclick=()=>{if(!getNick())return;NET.solo=true;NET.host=true;G=newG();G.players.push({id:ME.id,nick:ME.nick,bot:0,alive:1,chips:0,last:0,col:COLS[0]});addBots(5);startGame()};
 }
 render();
+const TRX=[[/(\d+)명 중 (\d+)위!/g,"#$2 of $1!"],[/(\d+)명 중 (\d+)위/g,"#$2 of $1"],[/내 순위 (\d+)위/g,"My rank #$1"],[/(\d+)\/(\d+) 라운드/g,"Round $1/$2"],[/(\d+)번 상품 · (\d+)칩/g,"Lot $1 · $2 chips"],[/(\d+)번 상품 (\d+)칩/g,"Lot $1 · $2"],[/(\d+)번 상품/g,"Lot $1"],[/(\d+)차 금고/g,"Vault round $1"],[/(\d+)차 ·/g,"Round $1 ·"],[/질문 (\d+) \/ 3/g,"Question $1 / 3"],[/(\d+)초/g,"$1s"],[/(\d+)칩/g,"$1 chips"],[/(\d+)개 걸었어요/g,"Bet $1"],[/(\d+)명/g,"$1"]];
+const EN={"두뇌 서바이벌 — 틈새 오락실":"Brain Survival — BREAK Pocket","두뇌 서바이벌":"Brain Survival","틈새 오락실":"BREAK Pocket","‹ 오락실":"‹ Arcade","최대 6명 · 5라운드 · 라운드마다 꼴찌는 탈락":"Up to 6 · 5 rounds · last place is eliminated",
+"셈 탑 결승":"Math Tower Final","셈 탑":"Math Tower","눈치 경매":"Secret Auction","다수결 함정":"Minority Trap","금고 거래":"Vault Deal",
+"같은 숫자 카드 6장으로 목표 수를 만드는 식을 세우세요. 카드마다 한 번씩만 쓸 수 있어요.":"Use the 6 shared number cards to build an expression that hits the target. Each card can be used once.",
+"딱 맞히면 6칩 · 가까울수록 칩 · 가장 빨리 맞힌 사람 +2칩":"Exact = 6 chips · closer earns more · fastest exact +2",
+"동전 10개로 상품 세 개에 몰래 값을 거세요. 가장 높게 건 사람이 가져가요. 단, 같은 값을 건 사람끼리는 둘 다 무효!":"Secretly bid your 10 coins on three prizes. Highest bid wins — but identical bids cancel each other out!",
+"건 동전은 이겨도 져도 사라져요 · 남은 동전은 다음 상품에":"Bid coins are spent win or lose · leftovers carry to the next prize",
+"세 가지 중 하나를 고르세요. 가장 적은 사람이 고른 쪽이 이겨요. 남들이 안 고를 것 같은 쪽을 읽으세요!":"Pick one of three. The option chosen by the FEWEST players wins. Read what others won't pick!",
+"가장 적은 쪽 +3칩 · 둘이 같이 적으면 +1칩씩 · 질문 3개":"Smallest group +3 · tied smallest +1 each · 3 questions",
+"짝과 금고를 두고 '나누기' 또는 '독차지'를 몰래 고르세요. 채팅으로 약속할 수 있지만 지킬지는 마음대로!":"With your partner, secretly choose 'Split' or 'Steal'. You can make promises in chat — keeping them is up to you!",
+"둘 다 나누기 +3씩 · 혼자 독차지 +5(상대 0) · 둘 다 독차지 0 · 두 번":"Both split +3 each · lone steal +5 (other 0) · both steal 0 · twice",
+"마지막 셈 탑! 이번엔 칩이 두 배예요. 역전할 마지막 기회예요.":"The last Math Tower! Chips are doubled — your final chance to come back.",
+"딱 맞히면 12칩 · 가장 빨리 맞힌 사람 +4칩":"Exact = 12 chips · fastest exact +4",
+"내 이름 (2~8자)":"Your name (2–8 chars)","닉네임":"Nickname","방 만들기 (친구 초대)":"Create room (invite friends)","방 코드 4자리":"4-letter room code","들어가기":"Join","혼자 하기 · 컴퓨터 5명과":"Play solo · with 5 bots",
+"방 채팅은 이 방 사람만 봐요 · 대화는 저장되지 않아요":"Room chat is visible only to this room · nothing is saved","· 설치 없이 바로":"· no install",
+"이름을 2자 이상 적어 주세요":"Please enter at least 2 characters","방 코드 4자리를 넣어 주세요":"Enter the 4-letter room code","방을 찾는 중…":"Looking for the room…","방을 찾지 못했어요. 코드를 확인해 주세요":"Room not found. Please check the code","연결하지 못했어요. 잠시 뒤 다시 해 주세요":"Couldn't connect. Please try again shortly","연결하지 못했어요":"Couldn't connect",
+"방 코드":"Room code","🔗 초대 링크 보내기":"🔗 Send invite link","링크를 복사했어요":"Link copied","빈자리":"Empty","방장":"Host","컴퓨터":"Bot","참가":"Player","컴퓨터로 채우기":"Fill with bots","시작하기":"Start",
+"2명 미만이면 컴퓨터가 함께해요 · 5라운드 약 10분 · 2·4라운드 뒤 꼴찌 탈락":"Bots join if fewer than 2 · 5 rounds, about 10 min · last place out after rounds 2 and 4",
+"방장이 시작하기를 기다리는 중…":"Waiting for the host to start…","방장 연결이 끊겼어요":"Lost connection to the host",
+"칩이 가장 적은 사람이 떠나요":"The player with the fewest chips leaves","아쉬워요! 끝까지 지켜보며 응원할 수 있어요":"So close! You can keep watching and cheering","살아남았어요! 다음 라운드로":"You survived! On to the next round"," 탈락":" is out",
+"목표 수 ·":"Target ·","목표":"Target","탈락했어요. 다른 사람들이 푸는 걸 지켜봐요":"You're out. Watch the others solve it","카드와 기호를 눌러 식을 만드세요":"Tap cards and symbols to build an expression","식 미완성":"incomplete","다시":"Clear","제출했어요":"Submitted","제출함:":"Submitted:","제출 안 함":"No answer","제출":"Submit","· 시간 안엔 다시 내도 돼요":"· you can resubmit before time runs out","결과":"Results",
+"남은 동전":"Coins left","· 같은 값은 무효!":"· ties cancel!","탈락했어요. 지켜보는 중":"You're out · watching","몰래 걸기":"Place secret bid","다시 걸기":"Change bid","개 걸었어요 · 남들은 몰라요":" bet · nobody else knows","공개!":"Reveal!","경매 결과":"Auction results","곧 다음 상품…":"Next prize coming…"," 낙찰 +":" wins +","같은 값끼리 무효 · 낙찰 없음":"Tied bids cancelled · no winner",
+"가장 적은 사람이 고를 쪽은? ·":"Which will the fewest pick? ·","골랐어요":"Picked","가장 적은 쪽이 이겨요":"The smallest group wins",
+"· 채팅으로 약속해 보세요":"· make a deal in chat","이번엔 짝이 없어 쉬어요 · +2칩":"No partner this time · +2 chips","상대:":"Partner:","🤝 나누기":"🤝 Split","😈 독차지":"😈 Steal","둘 다 나누면 +3씩":"Both split: +3 each","혼자면 +5 · 둘 다면 0":"Alone +5 · both 0","상대 나누기":"Partner splits","상대 독차지":"Partner steals","나 나누기":"I split","나 독차지":"I steal","금고가 열렸어요":"The vaults are open","짝을 바꿔 한 번 더…":"New partners, one more time…","독차지":"Steal","나누기":"Split"," 쉼 +2":" rests +2",
+"🏆 최종 결과":"🏆 Final results"," 우승!":" wins!","탈락했어요":"Eliminated","📣 결과 자랑하기":"📣 Share my result"," · 탈락":" · out","한 판 더":"Play again","다시 도전":"Try again","나가기":"Leave","방장이 한 판 더를 누르면 다시 시작해요":"Restarts when the host taps Play again","복사했어요":"Copied",
+"두뇌 서바이벌 같이 해요! 방 코드":"Join me in Brain Survival! Room code","나랑 붙어 볼래요?":"Want to take me on?",
+"방 채팅 · 이 방 사람만 봐요 · 저장 안 돼요":"Room chat · this room only · not saved","메시지":"Message","보내기":"Send","좋아요 👍":"Nice 👍","나누기 할게요 🤝":"I'll split 🤝","믿어도 돼요":"Trust me","흠… 🤔":"Hmm… 🤔","잘했어요 👏":"Well played 👏","한 판 더? 🔁":"Again? 🔁",
+"똑똑이":"Smarty","셈돌이":"Counter","눈치왕":"Sneaky","여우":"Foxy","곰돌이":"Teddy","부엉이":"Owly","다람쥐":"Squirrel","치타":"Cheetah","손님":"Guest","(컴)":"(bot)",
+"짜장면":"Black-bean noodles","짬뽕":"Spicy noodle soup","볶음밥":"Fried rice","바다":"Sea","산":"Mountains","도시":"City","아침형":"Morning person","저녁형":"Night owl","그때그때":"Depends","강아지":"Dog","고양이":"Cat","앵무새":"Parrot","여름":"Summer","겨울":"Winter","봄·가을":"Spring/Fall","떡볶이":"Tteokbokki","순대":"Sundae","튀김":"Fritters","버스":"Bus","지하철":"Subway","걷기":"Walking","영화관":"Cinema","집에서 넷플릭스":"Streaming at home","공원 산책":"Walk in the park","커피":"Coffee","녹차":"Green tea","탄산음료":"Soda","축구":"Soccer","야구":"Baseball","배구":"Volleyball","엘리베이터":"Elevator","계단":"Stairs","에스컬레이터":"Escalator","치킨":"Fried chicken","피자":"Pizza","햄버거":"Burger","라면에 계란":"Ramen + egg","라면에 치즈":"Ramen + cheese","그냥 라면":"Plain ramen","비 오는 날":"Rainy day","눈 오는 날":"Snowy day","맑은 날":"Sunny day","산책":"A walk","낮잠":"A nap","수다":"A chat","전화":"Call","문자":"Text","직접 만나기":"Meet in person","캠핑":"Camping","호텔":"Hotel","집":"Home","김치찌개":"Kimchi stew","된장찌개":"Soybean stew","부대찌개":"Army stew","드라마":"Dramas","예능":"Variety shows","뉴스":"News","초콜릿":"Chocolate","사탕":"Candy","젤리":"Gummies","노래방":"Karaoke","볼링":"Bowling","당구":"Billiards","바다 수영":"Ocean swim","계곡":"Valley stream","수영장":"Pool","단팥빵":"Red-bean bun","소보로":"Streusel bun","크림빵":"Cream bun","새벽":"Dawn","한낮":"Noon","한밤":"Midnight","사과":"Apple","배":"Pear","귤":"Tangerine","자동차":"Car","기차":"Train","비행기":"Plane","팥빙수":"Bingsu","아이스크림":"Ice cream","슬러시":"Slushie","동물원":"Zoo","수족관":"Aquarium","식물원":"Botanic garden","택시":"Taxi","자전거":"Bike","킥보드":"Scooter","봄나물":"Spring greens","가을 단풍":"Autumn leaves","겨울 눈꽃":"Winter snow",
+"ROUND":"ROUND","라운드":"Round"};
+/* ---------------- 다른 언어 (화면 글자를 바꿔 보여 줘요) ---------------- */
+const LANG=(()=>{try{const v=JSON.parse(localStorage.getItem("hanpan.lang")||"null");if(v)return v==="ko"?"ko":"en"}catch(e){}return /^ko/i.test(navigator.language||"ko")?"ko":"en"})();
+const TRK=Object.keys(EN).sort((a,b)=>b.length-a.length);
+function trS(s){if(LANG==="ko"||!s||!/[가-힣]/.test(s))return s;for(const k of TRK){if(k.length<9)break;if(s.indexOf(k)>=0)s=s.split(k).join(EN[k])}for(const [re,to] of TRX)s=s.replace(re,to);for(const k of TRK){if(s.indexOf(k)<0)continue;if(k.length<=2&&/[가-힣]/.test(k)){s=s.replace(new RegExp("(^|[\\s·(])"+k+"(?=[\\s·)!?.,]|$)","g"),"$1"+EN[k])}else s=s.split(k).join(EN[k])}return s.replace(/\s{2,}/g," ")}
+function trDom(root){if(LANG==="ko"||!root)return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode()){const v=n.nodeValue;if(/[가-힣]/.test(v)){const t=trS(v);if(t!==v)n.nodeValue=t}}if(root.querySelectorAll)root.querySelectorAll("[placeholder],[aria-label],[title]").forEach(e=>{for(const a of["placeholder","aria-label","title"]){const v=e.getAttribute(a);if(v&&/[가-힣]/.test(v))e.setAttribute(a,trS(v))}})}
+if(LANG!=="ko"){document.documentElement.lang="en";document.title=trS(document.title);let q=0;new MutationObserver(()=>{if(q)return;q=1;requestAnimationFrame(()=>{q=0;trDom(document.body)})}).observe(document.body,{childList:true,subtree:true,characterData:true});addEventListener("DOMContentLoaded",()=>trDom(document.body));setTimeout(()=>trDom(document.body),0)}
 </script>
 </body>
 </html>

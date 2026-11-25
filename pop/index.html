@@ -304,7 +304,7 @@ function showEnd(){S.shown=1;const w=S.end.w,wp=S.pl.find(p=>p.id===w),me=S.pl.f
   $("#over").classList.add("on");if(wp){const c=$("#wc").getContext("2d");c.scale(2,2);drawAnimal(c,wp.ch,40,44,64,2,0)}sfx(w===ME.id?1046:330,.3);
   const a=$("#again");a&&(a.onclick=()=>{if(champ)L.wins={};hostStart()});$("#quit").onclick=()=>{leave();location.href="/pop/"}}
 function hostStart(){const grid=makeGrid();L.wins=L.wins||{};L.mi=L.mi==null?0:(L.mi+1)%MAPS.length;if(!NET.solo)send({k:"start",L,grid});startLocal(0,grid)}
-$("#hx").onclick=()=>{if(confirm("판을 나갈까요?")){leave();location.href="/pop/"}};
+$("#hx").onclick=()=>{if(confirm(trS("판을 나갈까요?"))){leave();location.href="/pop/"}};
 /* ---------------- 조작 ---------------- */
 const KEY={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],KeyW:[0,-1],KeyS:[0,1],KeyA:[-1,0],KeyD:[1,0]},held=[];
 function setInp(){const k=held[held.length-1];inp.dx=k?KEY[k][0]:0;inp.dy=k?KEY[k][1]:0}
@@ -324,7 +324,7 @@ function renderLobby(){
   app.innerHTML=`<div class="top"><a href="/pop/">‹ 처음</a><span class="ttl">첨벙 대작전</span></div>${NET.solo?"":`<p class="note" style="margin:6px 0 0">방 코드</p><div class="code">${esc(L.code)}</div><button class="btn" id="share">🔗 초대 링크 보내기</button>`}<div class="lseats">${seats.join("")}</div>
   <p class="note" style="margin:0">내 캐릭터 고르기 (12종)</p><div class="chs">${CH.map((c,i)=>{const mine=(L.players.find(p=>p.id===ME.id)||{}).ch===i,taken=L.players.some(p=>p.ch===i&&p.id!==ME.id);return`<button data-pk="${i}" class="${mine?"on":""}" ${taken?"disabled":""} aria-label="${c.n}"><canvas data-ch="${i}" width="80" height="80"></canvas><small>${c.n}</small></button>`}).join("")}</div>${L.wins&&Object.keys(L.wins).length?`<p class="note">이번 대결 승수: ${L.players.map(p=>esc(p.nick)+" "+(L.wins[p.id]||0)).join(" · ")}</p>`:""}${NET.host?`<div class="row"><button class="btn" id="bots" ${L.players.length>=6?"disabled":""}>컴퓨터로 채우기</button><button class="btn pri" id="go">시작하기</button></div>`:`<p class="note">방장이 시작하기를 기다리는 중…</p>`}<p class="note">움직이기: 왼쪽 원판(PC는 방향키) · 물풍선: 첨벙 버튼(PC는 스페이스)</p>`;
   app.querySelectorAll("canvas[data-ch]").forEach(c=>{const x=c.getContext("2d");x.scale(2,2);const z=c.width/2;drawAnimal(x,+c.dataset.ch,z/2,z/2+1,z*.78,2,0)});app.querySelectorAll("[data-pk]").forEach(b=>b.onclick=()=>{const c=+b.dataset.pk;lsSet("pop.ch",c);if(NET.host||NET.solo){const me=L.players.find(p=>p.id===ME.id);if(me&&!L.players.some(p=>p.ch===c&&p!==me)){me.ch=c;pushLobby()}}else send({k:"pick",id:ME.id,ch:c});sfx(700,.06)});
-  const sh=$("#share");sh&&(sh.onclick=()=>{const url=location.origin+"/pop/?r="+L.code,t="첨벙 대작전 같이 해요! 방 코드 "+L.code;if(navigator.share)navigator.share({title:"첨벙 대작전",text:t,url}).catch(()=>{});else{navigator.clipboard&&navigator.clipboard.writeText(t+" "+url);toast("링크를 복사했어요")}});
+  const sh=$("#share");sh&&(sh.onclick=()=>{const url=location.origin+"/pop/?r="+L.code,t="첨벙 대작전 같이 해요! 방 코드 "+L.code;if(navigator.share)navigator.share({title:trS("첨벙 대작전"),text:trS(t),url}).catch(()=>{});else{navigator.clipboard&&navigator.clipboard.writeText(trS(t)+" "+url);toast("링크를 복사했어요")}});
   const bt=$("#bots");bt&&(bt.onclick=()=>{addBots();pushLobby()});const go=$("#go");go&&(go.onclick=()=>{if(L.players.length<2)addBots();hostStart()});
 }
 function renderHome(){
@@ -345,6 +345,24 @@ function renderHome(){
   $("#solo").onclick=()=>{if(!getNick())return;NET.solo=true;NET.host=true;const mc=lsGet("pop.ch",0)|0;L={code:"",host:ME.id,wins:{},players:[{id:ME.id,nick:ME.nick,bot:0,ch:mc}]};const pool=[...Array(NCH).keys()].filter(i=>i!==mc).sort(()=>Math.random()-.5);for(let i=0;i<3;i++){const k=pool[i];L.players.push({id:"bot"+i,nick:BOTN[k],bot:1,ch:k})}hostStart()};
 }
 renderHome();
+const TRX=[];
+const EN={"첨벙 대작전 — 틈새 오락실":"Splash Battle — BREAK Pocket","첨벙 대작전":"Splash Battle","틈새 오락실":"BREAK Pocket","‹ 오락실":"‹ Arcade","‹ 처음":"‹ Back",
+"물풍선으로 친구를 적셔라 · 최대 6명":"Soak your friends with water balloons · up to 6","물풍선 놓기":"Drop a balloon","잠시 뒤 십자로 첨벙!":"Splashes in a cross after a moment!","상자 깨기":"Break crates","아이템이 숨어 있어요":"Items are hidden inside","끝까지 버티기":"Stay dry","젖으면 탈락":"Get soaked and you're out",
+"내 이름 (2~8자)":"Your name (2–8 chars)","닉네임":"Nickname","내 캐릭터 고르기 (12종)":"Pick your character (12)","내 캐릭터":"Your character","방 만들기 (친구 초대)":"Create room (invite friends)","방 코드 4자리":"4-letter room code","들어가기":"Join","혼자 하기 · 컴퓨터 3명과":"Play solo · with 3 bots",
+"3판 2선승 · 💧 물줄기 길게 · 🎈 풍선 하나 더 · 👟 빨라지기 · 🛡 방패 · 🦶 풍선 차기 · 3분이 지나면 바깥부터 벽이 조여 와요":"Best of 3 · 💧 longer splash · 🎈 one more balloon · 👟 faster · 🛡 shield · 🦶 kick balloons · after 3 min the walls close in",
+"· 설치 없이 바로":"· no install","이름을 2자 이상 적어 주세요":"Please enter at least 2 characters","방 코드 4자리를 넣어 주세요":"Enter the 4-letter room code","방을 찾는 중…":"Looking for the room…","방을 찾지 못했어요":"Room not found","연결하지 못했어요":"Couldn't connect",
+"방 코드":"Room code","🔗 초대 링크 보내기":"🔗 Send invite link","링크를 복사했어요":"Link copied","빈자리":"Empty","방장":"Host","컴퓨터":"Bot","컴퓨터로 채우기":"Fill with bots","시작하기":"Start","방장이 시작하기를 기다리는 중…":"Waiting for the host to start…","방장 연결이 끊겼어요":"Lost connection to the host",
+"움직이기: 왼쪽 원판(PC는 방향키) · 물풍선: 첨벙 버튼(PC는 스페이스)":"Move: left pad (arrow keys on PC) · Balloon: Splash button (Space on PC)","이번 대결 승수:":"Wins this match:",
+"시작!":"Go!","조여요!":"Closing in!","첨벙!":"Splash!","판을 나갈까요?":"Leave the match?","나가기":"Leave","다음 판":"Next round","새 대결":"New match","다음 판엔 꼭!":"Get them next time!","마지막까지 살아남았어요 🎉":"Last one standing 🎉","3판 2선승 끝!":"Best of 3 complete!"," 최종 우승!":" wins the match!"," 승리!":" wins!","무승부!":"Draw!","판 끝":"Round over","축하해요!":"Congratulations!","방장이 한 판 더를 누르면 다시 시작해요":"Restarts when the host continues",
+"첨벙 대작전 같이 해요! 방 코드":"Play Splash Battle with me! Room code","손님":"Guest",
+"병아리":"Chick","토끼":"Bunny","개구리":"Frog","곰":"Bear","펭귄":"Penguin","여우":"Fox","고양이":"Cat","강아지":"Puppy","판다":"Panda","코알라":"Koala","돼지":"Piggy","햄스터":"Hamster",
+"꼬꼬":"Cheepy","깡총":"Hoppy","폴짝":"Leapy","곰곰":"Bruno","뒤뚱":"Waddles","살금":"Sneaky","야옹":"Meowy","멍멍":"Woofy","대나무":"Bamboo","유칼립":"Eucaly","꿀꿀":"Oinky","쪼르르":"Scurry"};
+/* ---------------- 다른 언어 (화면 글자를 바꿔 보여 줘요) ---------------- */
+const LANG=(()=>{try{const v=JSON.parse(localStorage.getItem("hanpan.lang")||"null");if(v)return v==="ko"?"ko":"en"}catch(e){}return /^ko/i.test(navigator.language||"ko")?"ko":"en"})();
+const TRK=Object.keys(EN).sort((a,b)=>b.length-a.length);
+function trS(s){if(LANG==="ko"||!s||!/[가-힣]/.test(s))return s;for(const k of TRK){if(k.length<9)break;if(s.indexOf(k)>=0)s=s.split(k).join(EN[k])}for(const [re,to] of TRX)s=s.replace(re,to);for(const k of TRK){if(s.indexOf(k)<0)continue;if(k.length<=2&&/[가-힣]/.test(k)){s=s.replace(new RegExp("(^|[\\s·(])"+k+"(?=[\\s·)!?.,]|$)","g"),"$1"+EN[k])}else s=s.split(k).join(EN[k])}return s.replace(/\s{2,}/g," ")}
+function trDom(root){if(LANG==="ko"||!root)return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode()){const v=n.nodeValue;if(/[가-힣]/.test(v)){const t=trS(v);if(t!==v)n.nodeValue=t}}if(root.querySelectorAll)root.querySelectorAll("[placeholder],[aria-label],[title]").forEach(e=>{for(const a of["placeholder","aria-label","title"]){const v=e.getAttribute(a);if(v&&/[가-힣]/.test(v))e.setAttribute(a,trS(v))}})}
+if(LANG!=="ko"){document.documentElement.lang="en";document.title=trS(document.title);let q=0;new MutationObserver(()=>{if(q)return;q=1;requestAnimationFrame(()=>{q=0;trDom(document.body)})}).observe(document.body,{childList:true,subtree:true,characterData:true});addEventListener("DOMContentLoaded",()=>trDom(document.body));setTimeout(()=>trDom(document.body),0)}
 </script>
 </body>
 </html>
