@@ -118,6 +118,7 @@ input.in:focus{outline:2px solid var(--grape);outline-offset:0}
 .hide{display:none!important}
 .foot{color:var(--mute);font-size:12px;text-align:center;margin-top:18px}
 .foot a{color:var(--mute)}
+.ttv{font-family:"Black Han Sans";font-size:72px;text-align:center;color:var(--gold);line-height:1.1}.ttr{width:100%;accent-color:#FFD23F;height:36px}
 .vault{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
 .vbtn{min-height:110px;border-radius:18px;border:2px solid var(--line);background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-weight:900;font-size:18px}
 .vbtn small{font-weight:500;color:var(--mute);font-size:12.5px}
@@ -189,10 +190,12 @@ const ROUNDS=[
  {k:"auc",n:"눈치 경매",ic:"🪙",rule:"동전 10개로 상품 세 개에 몰래 값을 거세요. 가장 높게 건 사람이 가져가요. 단, 같은 값을 건 사람끼리는 둘 다 무효!",tip:"건 동전은 이겨도 져도 사라져요 · 남은 동전은 다음 상품에",x:1},
  {k:"min",n:"다수결 함정",ic:"🎭",rule:"세 가지 중 하나를 고르세요. 가장 적은 사람이 고른 쪽이 이겨요. 남들이 안 고를 것 같은 쪽을 읽으세요!",tip:"가장 적은 쪽 +3칩 · 둘이 같이 적으면 +1칩씩 · 질문 3개",x:1},
  {k:"vault",n:"금고 거래",ic:"🔐",rule:"짝과 금고를 두고 '나누기' 또는 '독차지'를 몰래 고르세요. 채팅으로 약속할 수 있지만 지킬지는 마음대로!",tip:"둘 다 나누기 +3씩 · 혼자 독차지 +5(상대 0) · 둘 다 독차지 0 · 두 번",x:1},
+ {k:"tt",n:"3분의 2 맞히기",ic:"🎯",rule:"0부터 100 사이 숫자를 몰래 고르세요. 모두가 고른 숫자 평균의 3분의 2에 가장 가까운 사람이 이겨요. 남들은 몇을 고를까요?",tip:"가장 가까운 사람 +5칩 · 두 번째 +3칩 · 세 번째 +1칩 · 두 번",x:1},
  {k:"math",n:"셈 탑 결승",ic:"🏆",rule:"마지막 셈 탑! 이번엔 칩이 두 배예요. 역전할 마지막 기회예요.",tip:"딱 맞히면 12칩 · 가장 빨리 맞힌 사람 +4칩",x:2,fin:1}
 ];
 const ELIM_AFTER=[1,3]; // 라운드 번호(0부터) 뒤에 꼴찌 탈락
-const T={intro:7,math:75,auc:18,min:14,vault:30,reveal:7,elim:6};
+const T={intro:7,math:75,auc:18,min:14,vault:30,tt:20,reveal:7,elim:6};const NR=5;
+function RR(){return ROUNDS[G&&G.order?G.order[G.ri]:G.ri]||{}}
 if(/[?&]fast=1/.test(location.search))for(const k in T)T[k]=Math.max(1,Math.round(T[k]/6));
 
 /* ---------------- 네트워크 ---------------- */
@@ -230,16 +233,17 @@ function hostJoin(id,nick){
 }
 function addBots(n){const used=new Set(G.players.map(p=>p.nick));for(let i=0;i<n&&G.players.length<6;i++){let nm=BOTN.find(b=>!used.has(b))||("컴"+i);used.add(nm);G.players.push({id:"bot"+Math.random().toString(36).slice(2,7),nick:nm,bot:1,alive:1,chips:0,last:0,col:COLS[G.players.length%6],skill:.35+Math.random()*.55})}}
 function alive(){return G.players.filter(p=>p.alive)}
-function startGame(){if(G.players.length<2)addBots(Math.max(0,4-G.players.length));G.players.forEach((p,i)=>p.col=COLS[i%6]);G.ri=-1;nextRound()}
+function startGame(){G.order=[0].concat(shuffle([1,2,3,4]).slice(0,3),[5]);if(G.players.length<2)addBots(Math.max(0,4-G.players.length));G.players.forEach((p,i)=>p.col=COLS[i%6]);G.ri=-1;nextRound()}
 function nextRound(){
-  G.ri++;if(G.ri>=ROUNDS.length)return endGame();
+  G.ri++;if(G.ri>=NR)return endGame();
   G.phase="intro";G.dl=Date.now()+T.intro*1e3;G.d={};G.players.forEach(p=>p.last=0);push();
 }
 function beginPlay(){
-  const R=ROUNDS[G.ri];G.phase="play";G.d={k:R.k,sub:{}};
+  const R=RR();G.phase="play";G.d={k:R.k,sub:{}};
   if(R.k==="math"){const m=genMath(R.fin);Object.assign(G.d,m);G.dl=Date.now()+T.math*1e3;G.d.t0=Date.now()}
   if(R.k==="auc"){G.d.lot=0;G.d.prizes=[2,3,5];G.d.coins={};alive().forEach(p=>G.d.coins[p.id]=10);G.d.hist=[];G.dl=Date.now()+T.auc*1e3}
   if(R.k==="min"){G.d.q=0;G.d.qs=shuffle(MINQ).slice(0,3);G.d.hist=[];G.dl=Date.now()+T.min*1e3}
+  if(R.k==="tt"){G.d.r=0;G.d.hist=[];G.dl=Date.now()+T.tt*1e3}
   if(R.k==="vault"){G.d.r=0;G.d.hist=[];makePairs();G.dl=Date.now()+T.vault*1e3}
   push();scheduleBots();
 }
@@ -261,11 +265,12 @@ function hostAct(a){
     d.sub[p.id]={v,s:a.s,t:Date.now()-d.t0};push();if(alive().every(x=>d.sub[x.id]&&Math.abs(d.sub[x.id].v-d.target)<1e-9))G.dl=Math.min(G.dl,Date.now()+1500)}
   if(d.k==="auc"&&a.t==="bid"){const b=Math.max(0,Math.min(d.coins[p.id]||0,a.v|0));d.sub[p.id]=b;push();if(alive().every(x=>d.sub[x.id]!=null))G.dl=Math.min(G.dl,Date.now()+800)}
   if(d.k==="min"&&a.t==="pick"){d.sub[p.id]=a.v|0;push();if(alive().every(x=>d.sub[x.id]!=null))G.dl=Math.min(G.dl,Date.now()+800)}
+  if(d.k==="tt"&&a.t==="tt"){d.sub[p.id]=Math.max(0,Math.min(100,a.v|0));push();if(alive().every(x=>d.sub[x.id]!=null))G.dl=Math.min(G.dl,Date.now()+800)}
   if(d.k==="vault"&&a.t==="vc"){if(d.rest===p.id)return;d.sub[p.id]=a.v==="steal"?"steal":"split";push();if(alive().every(x=>x.id===d.rest||d.sub[x.id]))G.dl=Math.min(G.dl,Date.now()+800)}
 }
 function award(id,n,why){const p=G.players.find(x=>x.id===id);if(!p)return;p.chips+=n;p.last+=n}
 function resolve(){
-  const d=G.d,R=ROUNDS[G.ri],x=R.x;
+  const d=G.d,R=RR(),x=R.x;
   if(d.k==="math"){
     const rows=alive().map(p=>{const s=d.sub[p.id];const dist=s?Math.abs(s.v-d.target):1e9;let g=dist<1e-9?6:dist<=2?4:dist<=5?3:dist<=10?2:dist<=20?1:0;return{id:p.id,s,dist,g:g*x}});
     const ex=rows.filter(r=>r.dist<1e-9).sort((a,b)=>a.s.t-b.s.t);if(ex[0])ex[0].g+=2*x,ex[0].fast=1;
@@ -288,6 +293,7 @@ function resolve(){
     if(d.q<3){G.phase="mid";G.dl=Date.now()+5e3;push();return}
     finishRound();return;
   }
+  if(d.k==="tt"){const picks=alive().filter(p=>d.sub[p.id]!=null).map(p=>({id:p.id,v:d.sub[p.id]}));const avg=picks.length?picks.reduce((a,b)=>a+b.v,0)/picks.length:50,tg=Math.round(avg*2/3*10)/10;picks.sort((a,b)=>Math.abs(a.v-tg)-Math.abs(b.v-tg));const pts=[5,3,1];picks.forEach((p,i)=>{if(i<3)award(p.id,pts[i]*x),p.g=pts[i]*x});d.hist.push({tg,avg:Math.round(avg*10)/10,picks});d.r++;d.sub={};if(d.r<2){G.phase="mid";G.dl=Date.now()+6e3;push();return}finishRound();return}
   if(d.k==="vault"){
     const out=[];for(const [a,b] of d.pairs){const ca=d.sub[a]||"split",cb=d.sub[b]||"split";let ga=0,gb=0;
       if(ca==="split"&&cb==="split"){ga=gb=3}else if(ca==="steal"&&cb==="split"){ga=5}else if(ca==="split"&&cb==="steal"){gb=5}
@@ -304,13 +310,13 @@ function afterReveal(){
     const al=alive().slice().sort((a,b)=>a.chips-b.chips||a.last-b.last||Math.random()-.5);const o=al[0];o.alive=0;G.d.out=o.id;G.phase="elim";G.dl=Date.now()+T.elim*1e3;push();sfx(160,.4,"sawtooth",.06);return}
   nextRound();
 }
-function endGame(){G.phase="end";G.dl=0;push();sfx(1046,.3)}
+function endGame(){G.phase="end";G.dl=0;try{const r=G.players.slice().sort((a,b)=>(b.alive-a.alive)||(b.chips-a.chips)),k=r.findIndex(p=>p.id===ME.id)+1;if(k>0){const o=lsGet("brain.rec",{g:0,w:0,best:9});o.g++;if(k===1)o.w++;o.best=Math.min(o.best,k);lsSet("brain.rec",o)}}catch(e){}push();sfx(1046,.3)}
 function tick(){
   if(!G)return;
   if(NET.host&&G.phase!=="lobby"&&G.phase!=="end"&&G.dl&&Date.now()>=G.dl){
     if(G.phase==="intro")beginPlay();
     else if(G.phase==="play")resolve();
-    else if(G.phase==="mid"){G.phase="play";const k=G.d.k;G.dl=Date.now()+(k==="auc"?T.auc:k==="min"?T.min:T.vault)*1e3;if(k==="vault")makePairs();push();scheduleBots()}
+    else if(G.phase==="mid"){G.phase="play";const k=G.d.k;G.dl=Date.now()+(k==="auc"?T.auc:k==="min"?T.min:k==="tt"?T.tt:T.vault)*1e3;if(k==="vault")makePairs();push();scheduleBots()}
     else if(G.phase==="reveal")afterReveal();
     else if(G.phase==="elim")NET.solo&&G.d.out===ME.id?endGame():nextRound();
   }
@@ -329,6 +335,7 @@ function scheduleBots(){
       if(d.k==="math"){let best=solveBest(d.nums,d.target,Math.round(30+500*(b.skill||.6)));if(best&&Math.random()>(b.skill||.6)*.9){const alt=solveBest(d.nums,d.target+(rnd(2)?1:-1)*(2+rnd(9)),60);if(alt)best=alt}if(best){const tok=toTokens(best.s,d.nums);if(tok)hostAct({id:b.id,t:"sub",tok,s:best.s.replace(/^\((.*)\)$/,"$1")})}}
       if(d.k==="auc"){const c=d.coins[b.id]||0,left=3-d.lot;let v=d.lot===2?c:Math.min(c,Math.round(c/left*(.5+Math.random())));if(Math.random()<.2)v=Math.min(c,v+1);hostAct({id:b.id,t:"bid",v})}
       if(d.k==="min"){hostAct({id:b.id,t:"pick",v:rnd(3)})}
+      if(d.k==="tt"){const last=(d.hist[d.hist.length-1]||{}).tg;const v=last!=null?last*(.6+Math.random()*.3):pick([33,22,15,40,25,50])*(.8+Math.random()*.4);hostAct({id:b.id,t:"tt",v:Math.round(Math.max(0,Math.min(100,v)))})}
       if(d.k==="vault"&&d.rest!==b.id){const prev=(d.hist[d.hist.length-1]||{out:[]}).out.find(o=>o.a===b.id||o.b===b.id);let st=Math.random()<.3;if(prev){const opp=prev.a===b.id?prev.cb:prev.ca;if(opp==="steal")st=Math.random()<.6}hostAct({id:b.id,t:"vc",v:st?"steal":"split"})}
     },delay);
   }
@@ -342,15 +349,15 @@ function toTokens(s,nums){ // "(3+(5×2))" → 토큰(카드 번호 맞추기)
 /* ---------------- 화면 ---------------- */
 let UI={tok:[],bid:null,pick:null,vc:null,chat:[],screen:"home"};
 function seatsHTML(){return`<div class="seats">${G.players.map(p=>{const d=G.d||{},done=G.phase==="play"&&p.alive&&(d.sub&&d.sub[p.id]!=null);return`<div class="seat ${p.id===ME.id?"me":""} ${p.alive?"":"out"}"><div class="av" style="background:${p.col}">${esc(trS(p.nick).slice(0,1))}${done?'<span class="ok">✓</span>':""}</div><span class="nm">${esc(p.nick)}</span><span class="ch">${p.chips}칩</span></div>`}).join("")}</div>`}
-function topHTML(){const R=ROUNDS[G.ri]||{};return`<div class="top"><a href="/" aria-label="틈새 오락실로">‹ 오락실</a><span class="ttl">두뇌 서바이벌</span><span class="rd">${G.ri>=0&&G.phase!=="end"?`${G.ri+1}/${ROUNDS.length} 라운드<br>${esc(R.n)}`:""}</span></div>`}
+function topHTML(){const R=RR()||{};return`<div class="top"><a href="/" aria-label="틈새 오락실로">‹ 오락실</a><span class="ttl">두뇌 서바이벌</span><span class="rd">${G.ri>=0&&G.phase!=="end"?`${G.ri+1}/${NR} 라운드<br>${esc(R.n)}`:""}</span></div>`}
 function timerHTML(){return`<div class="timer"><i id="tbar"></i></div>`}
-function updTimer(){const e=$("#tbar");if(!e||!G||!G.dl)return;const tot=(G.phase==="intro"?T.intro:G.phase==="play"?(G.d.k==="math"?T.math:G.d.k==="auc"?T.auc:G.d.k==="min"?T.min:T.vault):G.phase==="elim"?T.elim:7)*1e3;const left=Math.max(0,G.dl-now());e.style.transform=`scaleX(${Math.min(1,left/tot)})`;const s=$("#tsec");if(s)s.textContent=Math.ceil(left/1e3)+"초";const sec=Math.ceil(left/1e3);if(G.phase==="play"&&sec<=5&&sec>0&&updTimer.last!==sec){updTimer.last=sec;sfx(sec<=2?1200:900,.05,"square",.03)}}
+function updTimer(){const e=$("#tbar");if(!e||!G||!G.dl)return;const tot=(G.phase==="intro"?T.intro:G.phase==="play"?(G.d.k==="math"?T.math:G.d.k==="auc"?T.auc:G.d.k==="min"?T.min:G.d.k==="tt"?T.tt:T.vault):G.phase==="elim"?T.elim:7)*1e3;const left=Math.max(0,G.dl-now());e.style.transform=`scaleX(${Math.min(1,left/tot)})`;const s=$("#tsec");if(s)s.textContent=Math.ceil(left/1e3)+"초";const sec=Math.ceil(left/1e3);if(G.phase==="play"&&sec<=5&&sec>0&&updTimer.last!==sec){updTimer.last=sec;sfx(sec<=2?1200:900,.05,"square",.03)}}
 const meP=()=>G&&G.players.find(p=>p.id===ME.id);
 let lastKey="";
 function render(){
   if(!G){renderHome();return}
   const key=G.phase+"|"+G.ri+"|"+(G.d&&(G.d.lot||G.d.q||G.d.r))+"|"+(G.d&&G.d.target);
-  if(key!==lastKey){lastKey=key;UI.tok=[];UI.bid=null;UI.pick=null;UI.vc=null}
+  if(key!==lastKey){lastKey=key;UI.tok=[];UI.bid=null;UI.pick=null;UI.vc=null;UI.tt=null}
   const f=document.activeElement,keepChat=f&&f.id==="cin"?f.value:null;
   let h=topHTML();
   if(G.phase==="lobby")h+=lobbyHTML();
@@ -368,7 +375,7 @@ function lobbyHTML(){
   ${isHost?`<div class="row"><button class="btn" data-a="bots" ${G.players.length>=6?"disabled":""}>컴퓨터로 채우기</button><button class="btn pri" data-a="start" ${G.players.length<2&&!NET.solo?"":""}>시작하기</button></div><p class="note">2명 미만이면 컴퓨터가 함께해요 · 5라운드 약 10분 · 2·4라운드 뒤 꼴찌 탈락</p>`:`<p class="note">방장이 시작하기를 기다리는 중…</p>`}`;
 }
 function phaseHTML(){
-  const R=ROUNDS[G.ri]||{},d=G.d||{},me=meP(),out=me&&!me.alive;
+  const R=RR()||{},d=G.d||{},me=meP(),out=me&&!me.alive;
   if(G.phase==="intro")return`${timerHTML()}<div class="intro"><div class="no">ROUND ${G.ri+1}</div><h2>${R.ic} ${esc(R.n)}</h2><p>${esc(R.rule)}</p><p class="tip">${esc(R.tip)}</p></div>`;
   if(G.phase==="elim"){const o=G.players.find(p=>p.id===d.out)||{};return`${timerHTML()}<div class="elim"><p class="sub">칩이 가장 적은 사람이 떠나요</p><div class="av" style="background:${o.col}">${esc(trS(o.nick||"?").slice(0,1))}</div><div class="big">${esc(o.nick)} 탈락</div><p class="sub">${o.id===ME.id?"아쉬워요! 끝까지 지켜보며 응원할 수 있어요":"살아남았어요! 다음 라운드로"}</p></div>`}
   if(G.phase==="end")return endHTML();
@@ -376,6 +383,7 @@ function phaseHTML(){
   if(d.k==="auc")return aucHTML(R,d,out);
   if(d.k==="min")return minHTML(R,d,out);
   if(d.k==="vault")return vaultHTML(R,d,out);
+  if(d.k==="tt")return ttHTML(R,d,out);
   return"";
 }
 function nameOf(id){const p=G.players.find(x=>x.id===id);return p?p.nick:"?"}
@@ -411,6 +419,12 @@ function minHTML(R,d,out){
   ${out?`<p class="sub">탈락했어요. 지켜보는 중</p>`:`<div class="choices">${q.map((o,k)=>`<button class="choice ${(UI.pick==null?my:UI.pick)===k?"on":""}" data-p="${k}">${esc(o)}<small>${(UI.pick==null?my:UI.pick)===k?"골랐어요":""}</small></button>`).join("")}</div>`}
   ${hist?`<div class="res">${hist}</div>`:""}`;
 }
+function ttHTML(R,d,out){
+  const hist=(d.hist||[]).map((h,i)=>`<div class="rr"><span class="n">${i+1}차 · 평균 ${h.avg} → 목표 <b style="color:var(--gold)">${h.tg}</b><br><small style="color:var(--mute);font-weight:400">${h.picks.map(p=>esc(nameOf(p.id))+" "+p.v+(p.g?` (+${p.g})`:"")).join(" · ")}</small></span></div>`).join("");
+  if(G.phase==="reveal"||G.phase==="mid")return`<p class="ph">${R.ic} 공개!</p><p class="sub">평균의 3분의 2에 가장 가까운 사람이 이겨요</p><div class="res">${hist}</div>${G.phase==="mid"?`<p class="note">한 번 더…</p>`:""}`;
+  const my=d.sub&&d.sub[ME.id],v=UI.tt==null?(my!=null?my:33):UI.tt;
+  return`${timerHTML()}<p class="ph">${d.r+1}차 · 몇을 고를까?</p><p class="sub">모두 고른 숫자 평균의 <b>3분의 2</b>에 가장 가까우면 승리 · <span id="tsec"></span></p>
+  ${out?`<p class="sub">탈락했어요. 지켜보는 중</p>`:`<div class="ttv" id="ttv">${v}</div><input type="range" id="ttr" min="0" max="100" value="${v}" class="ttr"><div class="row" style="margin-top:12px"><button class="btn" data-tt="-1">−1</button><button class="btn pri" data-a="ttsub">${my!=null?"다시 내기":"몰래 내기"}</button><button class="btn" data-tt="1">+1</button></div>${my!=null?`<p class="note">${my}을(를) 냈어요 · 남들은 몰라요</p>`:""}`}${hist?`<div class="res">${hist}</div>`:""}`}
 function vaultHTML(R,d,out){
   const hist=(d.hist||[]).map((h,i)=>`<div class="rr"><span class="n">${i+1}차 · ${h.out.map(o=>`${esc(nameOf(o.a))} ${o.ca==="steal"?"독차지":"나누기"}(+${o.ga}) vs ${esc(nameOf(o.b))} ${o.cb==="steal"?"독차지":"나누기"}(+${o.gb})`).join(" / ")}${h.rest?` · ${esc(nameOf(h.rest))} 쉼 +2`:""}</span></div>`).join("");
   if(G.phase==="reveal"||G.phase==="mid")return`<p class="ph">${R.ic} 금고가 열렸어요</p><div class="res">${hist}</div>${G.phase==="mid"?`<p class="note">짝을 바꿔 한 번 더…</p>`:""}`;
@@ -436,6 +450,7 @@ function bind(){
   app.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{const o=b.dataset.o;if(o==="back")UI.tok.pop();else if(o==="("||o===")")UI.tok.push({t:o});else UI.tok.push({t:"o",v:o});sfx(420,.03);render()});
   app.querySelectorAll("[data-b]").forEach(b=>b.onclick=()=>{UI.bid=+b.dataset.b;render()});
   app.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{UI.pick=+b.dataset.p;act({t:"pick",v:UI.pick});sfx(600,.05)});
+  const tr=$("#ttr");tr&&(tr.oninput=()=>{UI.tt=+tr.value;$("#ttv").textContent=UI.tt});app.querySelectorAll("[data-tt]").forEach(b=>b.onclick=()=>{UI.tt=Math.max(0,Math.min(100,(UI.tt==null?+$("#ttr").value:UI.tt)+(+b.dataset.tt)));$("#ttr").value=UI.tt;$("#ttv").textContent=UI.tt});
   app.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{UI.vc=b.dataset.v;act({t:"vc",v:UI.vc});sfx(600,.05)});
   app.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>sayChat(b.dataset.q));
   const cf=$("#cf");cf&&(cf.onsubmit=e=>{e.preventDefault();const i=$("#cin");if(i.value.trim()){sayChat(i.value);i.value=""}});
@@ -443,6 +458,7 @@ function bind(){
 }
 function doA(a){
   if(a==="brag"){const r=G.players.slice().sort((a,b)=>(b.alive-a.alive)||(b.chips-a.chips)),me=meP(),k=r.indexOf(me)+1,t=`두뇌 서바이벌 ${G.players.length}명 중 ${k}위! (${me?me.chips:0}칩) 나랑 붙어 볼래요?`;shareSheet({head:"결과 자랑하기",title:"두뇌 서바이벌",text:t,url:location.origin+"/brain/",img:location.origin+"/brain/cover.jpg",btn:"나도 도전하기"})}
+  if(a==="ttsub"){const v=UI.tt==null?+$("#ttr").value:UI.tt;act({t:"tt",v});toast(v+"을(를) 냈어요");sfx(700,.06)}
   if(a==="clr"){UI.tok=[];render()}
   if(a==="sub"){const s=UI.tok.map(t=>t.t==="n"?t.v:t.t==="o"?t.v:t.t).join("");act({t:"sub",tok:UI.tok,s});toast("제출했어요");sfx(780,.08)}
   if(a==="bid"&&UI.bid!=null){act({t:"bid",v:UI.bid});toast(UI.bid+"개 걸었어요");sfx(700,.06)}
@@ -462,11 +478,11 @@ function renderHome(){
   const r=new URLSearchParams(location.search).get("r")||"";
   app.innerHTML=`<div class="top"><a href="/">‹ 오락실</a></div>
   <div class="hero"><div class="kick">6명 중 마지막 1명</div><h1>두뇌 서바이벌</h1><p>계산 · 눈치 · 배신. 10분 안에 끝나는 두뇌 싸움</p></div>
-  <div class="path">${[["🧮","셈 탑"],["🪙","눈치 경매"],["x"],["🎭","다수결 함정"],["🔐","금고 거래"],["x"],["🏆","결승"]].map(a=>a[0]==="x"?`<span class="px">탈락</span>`:`<span class="pp"><i>${a[0]}</i>${a[1]}</span>`).join("")}</div>
-  <div class="won" id="wonline"><i></i><span>접속자 확인 중…</span></div>
+  <div class="path">${[["🧮","셈 탑"],["🎲","라운드 섞기"],["x"],["🎲","라운드 섞기"],["x"],["🏆","결승"]].map(a=>a[0]==="x"?`<span class="px">탈락</span>`:`<span class="pp"><i>${a[0]}</i>${a[1]}</span>`).join("")}</div>
+  <div class="won" id="wonline"><i></i><span>접속자 확인 중…</span></div>${(()=>{const o=lsGet("brain.rec",null);return o&&o.g?`<p class="note" style="margin:0">내 기록 · ${o.g}판 · 우승 ${o.w}번 · 최고 ${o.best}위</p>`:""})()}
   <div class="field"><label for="nk">내 이름 (2~8자)</label><input class="in" id="nk" maxlength="8" value="${esc(ME.nick)}" placeholder="닉네임"></div>
   <button class="btn pri big2" id="qm">🌏 전 세계 빠른 대결</button>
-  <div class="games">${[["🧮","셈 탑","숫자 6장으로 목표 수 만들기"],["🪙","눈치 경매","같은 값을 걸면 둘 다 꽝"],["🎭","다수결 함정","가장 적게 고른 쪽이 승리"],["🔐","금고 거래","나눌까, 독차지할까"]].map(g=>`<div class="gm"><i>${g[0]}</i><b>${g[1]}</b><small>${g[2]}</small></div>`).join("")}</div>
+  <div class="games">${[["🧮","셈 탑","숫자 6장으로 목표 수 만들기"],["🪙","눈치 경매","같은 값을 걸면 둘 다 꽝"],["🎭","다수결 함정","가장 적게 고른 쪽이 승리"],["🔐","금고 거래","나눌까, 독차지할까"],["🎯","3분의 2 맞히기","남들이 고를 숫자를 읽어라"]].map(g=>`<div class="gm"><i>${g[0]}</i><b>${g[1]}</b><small>${g[2]}</small></div>`).join("")}</div>
   
   <button class="btn" id="mk">👥 친구랑 방 만들기</button>
   <div class="row" style="margin-top:10px"><input class="in" id="jc" maxlength="4" placeholder="방 코드 4자리" value="${esc(r.toUpperCase())}" autocapitalize="characters" style="text-transform:uppercase"><button class="btn" id="jn" style="max-width:120px">들어가기</button></div>
@@ -479,8 +495,8 @@ function renderHome(){
   $("#solo").onclick=()=>{if(!getNick())return;NET.solo=true;NET.host=true;G=newG();G.players.push({id:ME.id,nick:ME.nick,bot:0,alive:1,chips:0,last:0,col:COLS[0]});addBots(5);startGame()};
 }
 render();
-const TRX=[[/지금 (\d+)명 접속 중/g,"$1 online now"],[/ · 열린 방 (\d+)개/g," · $1 open rooms"],[/(\d+)명 중 (\d+)위!/g,"#$2 of $1!"],[/(\d+)명 중 (\d+)위/g,"#$2 of $1"],[/내 순위 (\d+)위/g,"My rank #$1"],[/(\d+)\/(\d+) 라운드/g,"Round $1/$2"],[/(\d+)번 상품 · (\d+)칩/g,"Lot $1 · $2 chips"],[/(\d+)번 상품 (\d+)칩/g,"Lot $1 · $2"],[/(\d+)번 상품/g,"Lot $1"],[/(\d+)차 금고/g,"Vault round $1"],[/(\d+)차 ·/g,"Round $1 ·"],[/질문 (\d+) \/ 3/g,"Question $1 / 3"],[/(\d+)초/g,"$1s"],[/(\d+)칩/g,"$1 chips"],[/(\d+)개 걸었어요/g,"Bet $1"],[/(\d+)명/g,"$1"]];
-const EN={"6명 중 마지막 1명":"Last one of six","계산 · 눈치 · 배신. 10분 안에 끝나는 두뇌 싸움":"Math, bluffing, betrayal. A 10-minute battle of wits","결승":"Final","탈락":"OUT","접속자 확인 중…":"Checking who's online…","🌏 전 세계 빠른 대결":"🌏 Quick match (worldwide)","👥 친구랑 방 만들기":"👥 Room with friends","숫자 6장으로 목표 수 만들기":"Hit the target with 6 numbers","같은 값을 걸면 둘 다 꽝":"Same bid? Both lose","가장 적게 고른 쪽이 승리":"The least-picked option wins","나눌까, 독차지할까":"Split or steal?","전 세계에서 상대를 찾는 중…":"Finding players worldwide…","🌏 전 세계 공개 방 · ":"🌏 Public room · starts in ","초 뒤 시작":"s","사람이 더 오면 같이 하고, 빈자리는 컴퓨터가 채워요":"More people can join; bots fill empty seats","공유하기":"Share","친구 부르기":"Invite friends","결과 자랑하기":"Share my result","카카오톡":"KakaoTalk","링크 복사":"Copy link","문자":"SMS","다른 앱":"Other apps","같이 하기":"Play together","나도 도전하기":"Challenge me","복사했어요! 카카오톡 대화방에 붙여넣기 하면 돼요":"Copied! Paste it into a chat","방장이 나가서 내가 이어받았어요":"The host left — you are the host now","방장이 나갔어요 · 다른 사람이 이어받는 중…":"The host left · someone is taking over…","두뇌 서바이벌 — 틈새 오락실":"Brain Survival — BREAK Pocket","두뇌 서바이벌":"Brain Survival","틈새 오락실":"BREAK Pocket","‹ 오락실":"‹ Arcade","최대 6명 · 5라운드 · 라운드마다 꼴찌는 탈락":"Up to 6 · 5 rounds · last place is eliminated",
+const TRX=[[/평균 ([\d.]+) → 목표/g,"avg $1 → target"],[/(\d+)판 · 우승 (\d+)번 · 최고 (\d+)위/g,"$1 games · $2 wins · best #$3"],[/지금 (\d+)명 접속 중/g,"$1 online now"],[/ · 열린 방 (\d+)개/g," · $1 open rooms"],[/(\d+)명 중 (\d+)위!/g,"#$2 of $1!"],[/(\d+)명 중 (\d+)위/g,"#$2 of $1"],[/내 순위 (\d+)위/g,"My rank #$1"],[/(\d+)\/(\d+) 라운드/g,"Round $1/$2"],[/(\d+)번 상품 · (\d+)칩/g,"Lot $1 · $2 chips"],[/(\d+)번 상품 (\d+)칩/g,"Lot $1 · $2"],[/(\d+)번 상품/g,"Lot $1"],[/(\d+)차 금고/g,"Vault round $1"],[/(\d+)차 ·/g,"Round $1 ·"],[/질문 (\d+) \/ 3/g,"Question $1 / 3"],[/(\d+)초/g,"$1s"],[/(\d+)칩/g,"$1 chips"],[/(\d+)개 걸었어요/g,"Bet $1"],[/(\d+)명/g,"$1"]];
+const EN={"3분의 2 맞히기":"Guess 2/3","0부터 100 사이 숫자를 몰래 고르세요. 모두가 고른 숫자 평균의 3분의 2에 가장 가까운 사람이 이겨요. 남들은 몇을 고를까요?":"Secretly pick a number from 0 to 100. Closest to 2/3 of everyone's average wins. What will others pick?","가장 가까운 사람 +5칩 · 두 번째 +3칩 · 세 번째 +1칩 · 두 번":"Closest +5 · second +3 · third +1 · twice","평균의 3분의 2에 가장 가까운 사람이 이겨요":"Closest to 2/3 of the average wins","몇을 고를까?":"Pick a number","모두 고른 숫자 평균의":"Closest to","3분의 2":"2/3","에 가장 가까우면 승리":" of everyone's average wins","몰래 내기":"Submit secretly","다시 내기":"Change","을(를) 냈어요 · 남들은 몰라요":" submitted · nobody else knows","을(를) 냈어요":" submitted","한 번 더…":"Once more…","라운드 섞기":"Random round","남들이 고를 숫자를 읽어라":"Read what number others will pick","내 기록":"My record","우승":"wins","최고":"best","6명 중 마지막 1명":"Last one of six","계산 · 눈치 · 배신. 10분 안에 끝나는 두뇌 싸움":"Math, bluffing, betrayal. A 10-minute battle of wits","결승":"Final","탈락":"OUT","접속자 확인 중…":"Checking who's online…","🌏 전 세계 빠른 대결":"🌏 Quick match (worldwide)","👥 친구랑 방 만들기":"👥 Room with friends","숫자 6장으로 목표 수 만들기":"Hit the target with 6 numbers","같은 값을 걸면 둘 다 꽝":"Same bid? Both lose","가장 적게 고른 쪽이 승리":"The least-picked option wins","나눌까, 독차지할까":"Split or steal?","전 세계에서 상대를 찾는 중…":"Finding players worldwide…","🌏 전 세계 공개 방 · ":"🌏 Public room · starts in ","초 뒤 시작":"s","사람이 더 오면 같이 하고, 빈자리는 컴퓨터가 채워요":"More people can join; bots fill empty seats","공유하기":"Share","친구 부르기":"Invite friends","결과 자랑하기":"Share my result","카카오톡":"KakaoTalk","링크 복사":"Copy link","문자":"SMS","다른 앱":"Other apps","같이 하기":"Play together","나도 도전하기":"Challenge me","복사했어요! 카카오톡 대화방에 붙여넣기 하면 돼요":"Copied! Paste it into a chat","방장이 나가서 내가 이어받았어요":"The host left — you are the host now","방장이 나갔어요 · 다른 사람이 이어받는 중…":"The host left · someone is taking over…","두뇌 서바이벌 — 틈새 오락실":"Brain Survival — BREAK Pocket","두뇌 서바이벌":"Brain Survival","틈새 오락실":"BREAK Pocket","‹ 오락실":"‹ Arcade","최대 6명 · 5라운드 · 라운드마다 꼴찌는 탈락":"Up to 6 · 5 rounds · last place is eliminated",
 "셈 탑 결승":"Math Tower Final","셈 탑":"Math Tower","눈치 경매":"Secret Auction","다수결 함정":"Minority Trap","금고 거래":"Vault Deal",
 "같은 숫자 카드 6장으로 목표 수를 만드는 식을 세우세요. 카드마다 한 번씩만 쓸 수 있어요.":"Use the 6 shared number cards to build an expression that hits the target. Each card can be used once.",
 "딱 맞히면 6칩 · 가까울수록 칩 · 가장 빨리 맞힌 사람 +2칩":"Exact = 6 chips · closer earns more · fastest exact +2",
